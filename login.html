@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Login — DzzXNzz Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Righteous&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style-extra.css">
+</head>
+<body class="auth-page">
+<div class="auth-card">
+  <a href="/" class="auth-back"><i class="fas fa-arrow-left"></i> Kembali</a>
+  <div class="auth-logo">DzzXNzz Store</div>
+  <div class="auth-sub">Masuk ke akun kamu</div>
+  <div class="alert err" id="alertErr"><i class="fas fa-exclamation-circle"></i><span id="errTxt"></span></div>
+  <div class="alert ok"  id="alertOk" ><i class="fas fa-check-circle"></i><span id="okTxt"></span></div>
+  <label class="lbl">Username</label>
+  <input class="inp" id="username" type="text" placeholder="username kamu" autocapitalize="none">
+  <label class="lbl">Password</label>
+  <div class="inp-wrap">
+    <input class="inp" id="password" type="password" placeholder="password kamu">
+    <button class="eye-btn" onclick="toggleEye()"><i class="fas fa-eye" id="eyeIcon"></i></button>
+  </div>
+  <button class="btn-auth" id="btnLogin" onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> Login</button>
+  <div class="divider-line"></div>
+  <div class="auth-foot">Belum punya akun? <a href="/register">Register</a></div>
+</div>
+<script src="config.js"></script><script src="auth.js"></script>
+<script>
+if (Auth.isLoggedIn()) location.href = '/';
+function toggleEye() { const i=document.getElementById('password'); const ic=document.getElementById('eyeIcon'); i.type=i.type==='password'?'text':'password'; ic.className=i.type==='password'?'fas fa-eye':'fas fa-eye-slash'; }
+document.getElementById('password').addEventListener('keydown', e=>{ if(e.key==='Enter') doLogin(); });
+async function doLogin() {
+  const btn=document.getElementById('btnLogin');
+  const u=document.getElementById('username').value.trim().toLowerCase();
+  const p=document.getElementById('password').value;
+  document.getElementById('alertErr').classList.remove('show');
+  if(!u||!p){document.getElementById('errTxt').textContent='Username dan password wajib diisi';document.getElementById('alertErr').classList.add('show');return;}
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Masuk...';
+  try {
+    await Auth.login(u, p);
+    document.getElementById('okTxt').textContent='Login berhasil! Mengalihkan...';
+    document.getElementById('alertOk').classList.add('show');
+    setTimeout(()=>location.href='/', 800);
+  } catch(e) {
+    document.getElementById('errTxt').textContent=e.message;
+    document.getElementById('alertErr').classList.add('show');
+    btn.disabled=false; btn.innerHTML='<i class="fas fa-sign-in-alt"></i> Login';
+  }
+}
+</script>
+</body></html>

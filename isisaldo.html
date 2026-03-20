@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Isi Saldo — DzzXNzz Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Righteous&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style-extra.css">
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<nav class="navbar">
+  <div class="nav-left"><button id="menu-toggle">☰</button></div>
+  <div class="nav-right">
+    <a href="/isisaldo" class="coins-nav">🪙 <span id="coinCount">0</span></a>
+    <div class="user-avatar"><span class="nav-initial" id="navInitial">?</span></div>
+  </div>
+</nav>
+
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <span class="user-name-text">DzzXNzz</span>
+    <div class="sidebar-pfp"><img src="./image/image.jpg" alt="DzzXNzz" onerror="this.src='https://ui-avatars.com/api/?name=DzzXNzz&background=06070f&color=00e5ff&bold=true'"></div>
+  </div>
+  <ul class="sidebar-menu">
+    <li><a href="/"><i class="fas fa-home"></i> Home</a></li>
+    <li><a href="/product"><i class="fas fa-shopping-cart"></i> Product</a></li>
+    <li class="active"><a href="/isisaldo"><i class="fas fa-wallet"></i> Isi Saldo</a></li>
+    <li><a href="/contact"><i class="fas fa-phone-alt"></i> Contact</a></li>
+  </ul>
+  <div class="sidebar-divider"></div>
+  <ul class="sidebar-menu" id="sidebarAuthMenu"></ul>
+</div>
+<div class="overlay" id="overlay"></div>
+
+<main class="main-content">
+  <div style="text-align:center;margin-bottom:28px">
+    <h1 style="font-family:'Righteous',cursive;font-size:32px;background:linear-gradient(135deg,#ffe000,#ff8800);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px">💰 Isi Saldo</h1>
+    <p style="font-size:14px;color:rgba(255,255,255,0.4);font-weight:700">Top up koin untuk transaksi di DzzXNzz Store</p>
+  </div>
+
+  <!-- Balance box -->
+  <div class="coin-balance-box">
+    <div class="coin-balance-lbl">Saldo Koin Kamu</div>
+    <div class="coin-balance-val">🪙 <span id="balanceCoin">-</span></div>
+  </div>
+
+  <!-- Paket -->
+  <div style="font-size:12px;font-weight:900;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px">Pilih Paket</div>
+  <div class="topup-grid" id="topupGrid"></div>
+
+  <!-- Tombol bayar -->
+  <button id="btnBayar" onclick="bayar()" style="width:100%;padding:15px;background:linear-gradient(135deg,#ffe000,#ff8800);border:none;border-radius:40px;color:#06070f;font-family:'Nunito',sans-serif;font-size:16px;font-weight:900;cursor:pointer;transition:0.25s;box-shadow:0 6px 24px rgba(255,224,0,0.35);display:none">
+    <i class="fas fa-qrcode"></i> Bayar dengan QRIS
+  </button>
+  <div id="authPrompt" style="display:none;text-align:center;padding:40px 20px;background:rgba(13,15,25,0.88);border-radius:20px;border:1px solid rgba(0,229,255,0.15)">
+    <i class="fas fa-lock" style="font-size:36px;color:rgba(0,229,255,0.3);margin-bottom:12px;display:block"></i>
+    <h3 style="margin-bottom:8px">Login untuk isi saldo</h3>
+    <p style="font-size:13px;color:rgba(255,255,255,0.4);font-weight:700;margin-bottom:18px">Kamu perlu login terlebih dahulu</p>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <a href="/login" style="padding:11px 24px;background:linear-gradient(135deg,#00e5ff,#00ff88);border-radius:40px;color:#06070f;font-weight:900;font-size:14px;text-decoration:none">Login</a>
+      <a href="/register" style="padding:11px 24px;border:1.5px solid rgba(0,229,255,0.4);border-radius:40px;color:#00e5ff;font-weight:900;font-size:14px;text-decoration:none">Register</a>
+    </div>
+  </div>
+</main>
+
+<!-- QR Popup -->
+<div class="qr-overlay" id="qrOverlay">
+  <div class="qr-box">
+    <div class="qr-top">
+      <span class="qr-title">Scan QRIS</span>
+      <button class="qr-close" onclick="closeQR()">✕</button>
+    </div>
+    <div class="timer-bar-wrap"><div class="timer-bar" id="timerBar" style="width:100%"></div></div>
+    <div class="qr-timer">Sisa waktu: <span id="timerVal">--:--</span></div>
+    <div class="qr-img-wrap"><img id="qrImg" src="" alt="QRIS"></div>
+    <div class="qr-amount" id="qrAmount">Rp -</div>
+    <div class="qr-hint">Scan QR Code dengan aplikasi pembayaran apapun</div>
+    <div style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px 14px;font-size:12px">
+      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.05)"><span style="color:rgba(255,255,255,0.4);font-weight:700">Paket</span><span style="color:#fff;font-weight:900" id="qrPaket">-</span></div>
+      <div style="display:flex;justify-content:space-between;padding:5px 0"><span style="color:rgba(255,255,255,0.4);font-weight:700">Koin didapat</span><span style="color:#ffe000;font-weight:900" id="qrKoin">-</span></div>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script><script src="auth.js"></script><script src="script.js"></script>
+<script>
+let selectedPaket = null;
+let pollTimer = null;
+let countTimer = null;
+let totalSecs = 0;
+let leftSecs  = 0;
+let currentOrderId = null;
+
+// Render paket
+const grid = document.getElementById('topupGrid');
+TOPUP_PAKET.forEach(p => {
+  grid.innerHTML +=
+    `<div class="topup-card" id="card-${p.id}" onclick="selectPaket('${p.id}')">
+      <div class="topup-coin">🪙 ${p.label}</div>
+      <div class="topup-harga">Rp ${p.harga.toLocaleString('id-ID')}</div>
+      ${p.bonus ? `<div class="topup-bonus">${p.bonus}</div>` : ''}
+    </div>`;
+});
+
+// Cek login
+if (!Auth.isLoggedIn()) {
+  document.getElementById('topupGrid').style.display = 'none';
+  document.getElementById('authPrompt').style.display = 'block';
+} else {
+  // Load balance
+  Auth.getProfile().then(p => {
+    if (p) document.getElementById('balanceCoin').textContent = Number(p.coins).toLocaleString('id-ID');
+  });
+}
+
+function selectPaket(id) {
+  if (!Auth.isLoggedIn()) return;
+  selectedPaket = TOPUP_PAKET.find(p => p.id === id);
+  document.querySelectorAll('.topup-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('card-' + id).classList.add('selected');
+  document.getElementById('btnBayar').style.display = 'block';
+}
+
+async function bayar() {
+  if (!selectedPaket) return;
+  const btn = document.getElementById('btnBayar');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Membuat QRIS...';
+  try {
+    const orderId = 'TOPUP-' + Date.now() + '-' + Math.random().toString(36).substr(2,5).toUpperCase();
+    // Buat transaksi Pakasir
+    const r = await fetch(CONFIG.PAKASIR_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        project:   CONFIG.PAKASIR_PROJECT,
+        order_id:  orderId,
+        amount:    selectedPaket.harga,
+        api_key:   CONFIG.PAKASIR_API_KEY
+      })
+    });
+    const d = await r.json();
+    if (!r.ok || !d?.payment) throw new Error(d?.message || 'Gagal membuat QRIS');
+
+    const qrString  = d.payment.payment_number || d.payment.qr_string;
+    const expiredAt = d.payment.expired_at;
+
+    // Simpan ke Supabase
+    const session = Auth.getSession();
+    const userId  = session?.user?.id;
+    const profile = await Auth.getProfile();
+    await fetch(CONFIG.SUPABASE_URL + '/rest/v1/topup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': CONFIG.SUPABASE_ANON,
+        'Authorization': 'Bearer ' + Auth.getToken(),
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        username:     profile?.username,
+        order_id:     orderId,
+        amount:       selectedPaket.harga,
+        coins:        selectedPaket.coins,
+        status:       'pending',
+        qr_string:    qrString,
+        payment_expired: expiredAt
+      })
+    });
+
+    currentOrderId = orderId;
+    showQR(qrString, expiredAt);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-qrcode"></i> Bayar dengan QRIS';
+    startPoll(orderId);
+
+  } catch(e) {
+    alert('Error: ' + e.message);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-qrcode"></i> Bayar dengan QRIS';
+  }
+}
+
+function showQR(qrString, expiredAt) {
+  // QR image: pakai QR generator
+  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(qrString);
+  document.getElementById('qrImg').src     = qrUrl;
+  document.getElementById('qrAmount').textContent = 'Rp ' + selectedPaket.harga.toLocaleString('id-ID');
+  document.getElementById('qrPaket').textContent  = selectedPaket.label;
+  document.getElementById('qrKoin').textContent   = '🪙 ' + selectedPaket.coins.toLocaleString('id-ID');
+  document.getElementById('qrOverlay').classList.add('show');
+
+  // Countdown
+  if (expiredAt) {
+    const expMs = new Date(expiredAt).getTime();
+    totalSecs   = Math.round((expMs - Date.now()) / 1000);
+    leftSecs    = totalSecs;
+    clearInterval(countTimer);
+    countTimer  = setInterval(() => {
+      leftSecs = Math.max(0, leftSecs - 1);
+      const pct = totalSecs > 0 ? (leftSecs / totalSecs * 100) : 0;
+      const bar = document.getElementById('timerBar');
+      const val = document.getElementById('timerVal');
+      if (bar) { bar.style.width = pct + '%'; bar.style.background = pct > 30 ? 'linear-gradient(90deg,#00e5ff,#00ff88)' : pct > 10 ? 'linear-gradient(90deg,#ffe000,#ff8800)' : 'linear-gradient(90deg,#ff0055,#ff4444)'; }
+      if (val) { const m=Math.floor(leftSecs/60); const s=leftSecs%60; val.textContent=m+':'+(s<10?'0':'')+s; }
+      if (leftSecs <= 0) { clearInterval(countTimer); closeQR(); }
+    }, 1000);
+  }
+}
+
+function closeQR() {
+  document.getElementById('qrOverlay').classList.remove('show');
+  clearInterval(pollTimer);
+  clearInterval(countTimer);
+}
+
+function startPoll(orderId) {
+  clearInterval(pollTimer);
+  pollTimer = setInterval(async () => {
+    try {
+      const r   = await fetch(CONFIG.SUPABASE_URL + '/rest/v1/topup?order_id=eq.' + orderId + '&select=status,coins', {
+        headers: { 'apikey': CONFIG.SUPABASE_ANON, 'Authorization': 'Bearer ' + Auth.getToken() }
+      });
+      const arr = await r.json();
+      if (arr?.[0]?.status === 'paid') {
+        clearInterval(pollTimer);
+        clearInterval(countTimer);
+        closeQR();
+        // Refresh balance
+        const p = await Auth.getProfile(true);
+        if (p) {
+          document.getElementById('balanceCoin').textContent = Number(p.coins).toLocaleString('id-ID');
+          document.getElementById('coinCount').textContent   = Number(p.coins).toLocaleString('id-ID');
+        }
+        alert('🎉 Pembayaran berhasil! Koin sudah masuk.');
+      }
+    } catch(e) {}
+  }, 5000);
+}
+
+window.selectPaket = selectPaket;
+window.bayar       = bayar;
+window.closeQR     = closeQR;
+</script>
+</body></html>

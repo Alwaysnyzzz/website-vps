@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Register — DzzXNzz Store</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Righteous&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style-extra.css">
+</head>
+<body class="auth-page">
+<div class="auth-card">
+  <a href="/" class="auth-back"><i class="fas fa-arrow-left"></i> Kembali</a>
+  <div class="auth-logo">DzzXNzz Store</div>
+  <div class="auth-sub">Buat akun baru — gratis!</div>
+  <div class="alert err" id="alertErr"><i class="fas fa-exclamation-circle"></i><span id="errTxt"></span></div>
+  <div class="alert ok"  id="alertOk" ><i class="fas fa-check-circle"></i><span id="okTxt"></span></div>
+  <label class="lbl">Username</label>
+  <input class="inp" id="username" type="text" placeholder="min 3 karakter" autocapitalize="none" maxlength="20" oninput="valU(this)">
+  <div class="hint">Huruf kecil, angka, underscore. Contoh: dzz_1</div>
+  <label class="lbl">Password</label>
+  <div class="inp-wrap">
+    <input class="inp" id="password" type="password" placeholder="min 6 karakter" oninput="valP(this)">
+    <button class="eye-btn" onclick="toggleEye()"><i class="fas fa-eye" id="eyeIcon"></i></button>
+  </div>
+  <label class="lbl">Konfirmasi Password</label>
+  <input class="inp" id="confirm" type="password" placeholder="ulangi password" oninput="valC(this)">
+  <button class="btn-auth" id="btnReg" onclick="doRegister()"><i class="fas fa-user-plus"></i> Daftar Sekarang</button>
+  <div class="divider-line"></div>
+  <div class="auth-foot">Sudah punya akun? <a href="/login">Login</a></div>
+</div>
+<script src="config.js"></script><script src="auth.js"></script>
+<script>
+if (Auth.isLoggedIn()) location.href = '/';
+function toggleEye(){const i=document.getElementById('password');const ic=document.getElementById('eyeIcon');i.type=i.type==='password'?'text':'password';ic.className=i.type==='password'?'fas fa-eye':'fas fa-eye-slash';}
+function valU(el){const ok=/^[a-z0-9_]{3,20}$/.test(el.value);el.classList.toggle('valid',ok&&el.value.length>0);el.classList.toggle('invalid',!ok&&el.value.length>0);}
+function valP(el){const ok=el.value.length>=6;el.classList.toggle('valid',ok);el.classList.toggle('invalid',!ok&&el.value.length>0);}
+function valC(el){const ok=el.value===document.getElementById('password').value&&el.value.length>0;el.classList.toggle('valid',ok);el.classList.toggle('invalid',!ok&&el.value.length>0);}
+document.getElementById('confirm').addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
+async function doRegister(){
+  const btn=document.getElementById('btnReg');
+  const u=document.getElementById('username').value.trim().toLowerCase();
+  const p=document.getElementById('password').value;
+  const c=document.getElementById('confirm').value;
+  document.getElementById('alertErr').classList.remove('show');
+  if(!u||!/^[a-z0-9_]{3,20}$/.test(u)){document.getElementById('errTxt').textContent='Username 3-20 karakter, huruf kecil/angka/underscore';document.getElementById('alertErr').classList.add('show');return;}
+  if(p.length<6){document.getElementById('errTxt').textContent='Password minimal 6 karakter';document.getElementById('alertErr').classList.add('show');return;}
+  if(p!==c){document.getElementById('errTxt').textContent='Konfirmasi password tidak cocok';document.getElementById('alertErr').classList.add('show');return;}
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Mendaftar...';
+  try {
+    await Auth.register(u, p);
+    // Buat profil di tabel profiles
+    try { await Auth.createProfile(u); } catch(e2) { console.warn('Profile err:', e2.message); }
+    document.getElementById('okTxt').textContent='Akun berhasil dibuat!';
+    document.getElementById('alertOk').classList.add('show');
+    setTimeout(()=>location.href='/', 900);
+  } catch(e) {
+    document.getElementById('errTxt').textContent=e.message;
+    document.getElementById('alertErr').classList.add('show');
+    btn.disabled=false;btn.innerHTML='<i class="fas fa-user-plus"></i> Daftar Sekarang';
+  }
+}
+</script>
+</body></html>
