@@ -1,25 +1,5 @@
 /* Extra styles untuk loading, auth pages, isi saldo */
 
-/* Loading */
-#loading-screen{position:fixed;inset:0;background:#06070f;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.5s}
-.loading-brand{font-family:'Righteous',cursive;font-size:36px;background:linear-gradient(135deg,#00e5ff,#00ff88);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 20px rgba(0,229,255,0.5))}
-.loader-rings{position:relative;width:70px;height:70px;display:flex;align-items:center;justify-content:center}
-.ring{position:absolute;border-radius:50%;border:2px solid transparent}
-.ring-outer{width:70px;height:70px;border-top-color:#00e5ff;animation:spin 1s linear infinite}
-.ring-inner{width:48px;height:48px;border-top-color:#00ff88;animation:spin 0.7s linear infinite reverse}
-.ring-dot{width:10px;height:10px;border-radius:50%;background:#00e5ff;box-shadow:0 0 12px #00e5ff}
-.loading-text{font-size:13px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:2px}
-.progress-container{width:180px;background:rgba(255,255,255,0.07);border-radius:20px;height:4px;overflow:hidden}
-.progress-bar{height:100%;background:linear-gradient(90deg,#00e5ff,#00ff88);border-radius:20px;width:0;transition:width 0.1s}
-#progress-text{font-size:11px;color:rgba(255,255,255,0.3);font-weight:700}
-.loading-dots{display:flex;gap:6px}
-.loading-dots span{width:7px;height:7px;border-radius:50%;background:#00e5ff;animation:dotPulse 1.2s infinite}
-.loading-dots span:nth-child(2){animation-delay:.2s;background:#00ff88}
-.loading-dots span:nth-child(3){animation-delay:.4s;background:#bf00ff}
-.loading-dots span:nth-child(4){animation-delay:.6s;background:#ff4de4}
-@keyframes dotPulse{0%,100%{opacity:1}50%{opacity:.2}}
-@keyframes spin{to{transform:rotate(360deg)}}
-
 /* Sidebar auth btn */
 .sidebar-auth-btn{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;transition:0.2s;text-decoration:none;margin:2px 0}
 .sidebar-auth-btn.login{color:#00e5ff}.sidebar-auth-btn.register{color:#00ff88}.sidebar-auth-btn.logout{color:#ff6688}.sidebar-auth-btn.coins{color:#ffe000}

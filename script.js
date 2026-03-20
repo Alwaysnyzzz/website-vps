@@ -32,36 +32,6 @@ document.addEventListener('DOMContentLoaded', async function () {
       '<li><a href="/register" class="sidebar-auth-btn register"><i class="fas fa-user-plus"></i> Register</a></li>';
   }
 
-  // ===== LOADING SCREEN =====
-  const loadingScreen = document.getElementById('loading-screen');
-  if (loadingScreen) {
-    const bar  = document.querySelector('.progress-bar');
-    const text = document.getElementById('progress-text');
-    if (sessionStorage.getItem('siteLoaded')) {
-      loadingScreen.style.opacity = '0';
-      setTimeout(() => loadingScreen.style.display = 'none', 400);
-    } else {
-      let progress = 0, stepIndex = 0;
-      const steps  = [20, 45, 70, 90, 100];
-      function nextStep() {
-        if (stepIndex >= steps.length) {
-          sessionStorage.setItem('siteLoaded', '1');
-          setTimeout(() => { loadingScreen.style.opacity = '0'; setTimeout(() => loadingScreen.style.display = 'none', 500); }, 200);
-          return;
-        }
-        const target = steps[stepIndex];
-        const iv = setInterval(() => {
-          if (progress < target) {
-            progress++;
-            if (bar)  bar.style.width   = progress + '%';
-            if (text) text.textContent  = progress + '%';
-          } else { clearInterval(iv); stepIndex++; setTimeout(nextStep, 300); }
-        }, 15);
-      }
-      nextStep();
-    }
-  }
-
   // ===== CANVAS STARS =====
   const canvas = document.getElementById('canvas');
   if (canvas) {

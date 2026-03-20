@@ -19,7 +19,7 @@ const Auth = {
   logout()      { localStorage.removeItem('nyzz-session'); localStorage.removeItem('nyzz-profile'); },
 
   async login(username, password) {
-    const email = username.toLowerCase().trim() + '@nyzz.internal';
+    const email = username.toLowerCase().trim() + '@nyzz.com';
     const r = await fetch(this._base() + '/token?grant_type=password', {
       method: 'POST', headers: this._headers(),
       body: JSON.stringify({ email, password })
@@ -31,7 +31,7 @@ const Auth = {
   },
 
   async register(username, password) {
-    const email = username.toLowerCase().trim() + '@nyzz.internal';
+    const email = username.toLowerCase().trim() + '@nyzz.com';
     // Sign up
     const r = await fetch(this._base() + '/signup', {
       method: 'POST', headers: this._headers(),
