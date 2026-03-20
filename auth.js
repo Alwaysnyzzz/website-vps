@@ -1,80 +1,63 @@
-// auth.js — Auth helper global (Supabase REST API, tanpa SDK)
+// auth.js — Auth custom: username + password hash di tabel profiles
 
 const Auth = {
-  _base() { return CONFIG.SUPABASE_URL + '/auth/v1'; },
-  _headers(withToken = false) {
-    const h = { 'Content-Type': 'application/json', 'apikey': CONFIG.SUPABASE_ANON };
-    if (withToken) h['Authorization'] = 'Bearer ' + this.getToken();
-    return h;
-  },
   getSession()  { try { return JSON.parse(localStorage.getItem('nyzz-session')); } catch { return null; } },
-  getToken()    { return this.getSession()?.access_token || null; },
-  isLoggedIn()  {
-    const s = this.getSession();
-    if (!s) return false;
-    if (s.expires_at && Date.now()/1000 > s.expires_at) { this.logout(); return false; }
-    return true;
-  },
+  isLoggedIn()  { const s=this.getSession(); if(!s?.token) return false; if(s.expires_at && Date.now()>s.expires_at){this.logout();return false;} return true; },
   setSession(s) { localStorage.setItem('nyzz-session', JSON.stringify(s)); },
   logout()      { localStorage.removeItem('nyzz-session'); localStorage.removeItem('nyzz-profile'); },
 
+  async hash(str, salt) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str + salt));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  },
+
   async login(username, password) {
-    const email = username.toLowerCase().trim() + '@nyzz.com';
-    const r = await fetch(this._base() + '/token?grant_type=password', {
-      method: 'POST', headers: this._headers(),
-      body: JSON.stringify({ email, password })
+    const u = username.toLowerCase().trim();
+    const h = await this.hash(password, u);
+    const r = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/profiles?username=eq.${u}&select=id,username,coins,avatar_url,password_hash`, {
+      headers: { apikey: CONFIG.SUPABASE_ANON, Authorization: `Bearer ${CONFIG.SUPABASE_ANON}` }
     });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error_description || d.msg || 'Login gagal');
-    this.setSession(d);
-    return d;
+    const arr = await r.json();
+    if (!arr?.length) throw new Error('Username tidak ditemukan');
+    const user = arr[0];
+    if (user.password_hash !== h) throw new Error('Password salah');
+    const session = { token: btoa(u+':'+h.substr(0,16)), username: u, user_id: user.id, expires_at: Date.now()+7*24*60*60*1000 };
+    this.setSession(session);
+    localStorage.setItem('nyzz-profile', JSON.stringify({ id:user.id, username:u, coins:user.coins, avatar_url:user.avatar_url }));
+    return session;
   },
 
   async register(username, password) {
-    const email = username.toLowerCase().trim() + '@nyzz.com';
-    // Sign up
-    const r = await fetch(this._base() + '/signup', {
-      method: 'POST', headers: this._headers(),
-      body: JSON.stringify({ email, password })
+    const u = username.toLowerCase().trim();
+    const h = await this.hash(password, u);
+    const cek = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/profiles?username=eq.${u}&select=id`, {
+      headers: { apikey: CONFIG.SUPABASE_ANON, Authorization: `Bearer ${CONFIG.SUPABASE_ANON}` }
+    });
+    const exist = await cek.json();
+    if (exist?.length) throw new Error('Username sudah dipakai');
+    const r = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/profiles`, {
+      method: 'POST',
+      headers: { apikey: CONFIG.SUPABASE_ANON, Authorization: `Bearer ${CONFIG.SUPABASE_ANON}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify({ username: u, coins: 0, password_hash: h })
     });
     const d = await r.json();
-    if (!r.ok) throw new Error(d.error_description || d.msg || 'Register gagal');
-    // Login langsung
-    return this.login(username, password);
+    if (!r.ok) throw new Error(d?.message || 'Gagal membuat akun');
+    return this.login(u, password);
   },
 
-  async getProfile(force = false) {
+  async getProfile(force=false) {
     if (!this.isLoggedIn()) return null;
-    if (!force) {
-      try { const c = JSON.parse(localStorage.getItem('nyzz-profile')); if (c?.username) return c; } catch {}
-    }
+    if (!force) { try { const c=JSON.parse(localStorage.getItem('nyzz-profile')); if(c?.username) return c; } catch {} }
+    const s = this.getSession();
+    if (!s?.username) return null;
     try {
-      // Ambil user id dari session
-      const session = this.getSession();
-      const userId  = session?.user?.id;
-      if (!userId) return null;
-      const r = await fetch(CONFIG.SUPABASE_URL + '/rest/v1/profiles?id=eq.' + userId + '&select=*', {
-        headers: { ...this._headers(), Authorization: 'Bearer ' + this.getToken() }
+      const r = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/profiles?username=eq.${s.username}&select=id,username,coins,avatar_url`, {
+        headers: { apikey: CONFIG.SUPABASE_ANON, Authorization: `Bearer ${CONFIG.SUPABASE_ANON}` }
       });
-      if (!r.ok) return null;
       const arr = await r.json();
-      const p   = arr[0] || null;
+      const p   = arr?.[0] || null;
       if (p) localStorage.setItem('nyzz-profile', JSON.stringify(p));
       return p;
     } catch { return null; }
-  },
-
-  async createProfile(username) {
-    const session = this.getSession();
-    const userId  = session?.user?.id;
-    if (!userId) throw new Error('Tidak ada session');
-    const r = await fetch(CONFIG.SUPABASE_URL + '/rest/v1/profiles', {
-      method: 'POST',
-      headers: { ...this._headers(), Authorization: 'Bearer ' + this.getToken(), Prefer: 'return=representation' },
-      body: JSON.stringify({ id: userId, username: username.toLowerCase().trim(), coins: 0 })
-    });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.message || 'Gagal membuat profil');
-    return d[0];
   }
 };
