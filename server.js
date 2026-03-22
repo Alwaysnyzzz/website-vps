@@ -95,10 +95,10 @@ app.post('/api/create-transaction', auth, async (req, res) => {
     // Buat transaksi ke Pakasir
     const pkUrl  = new URL(CONFIG.PAKASIR_ENDPOINT);
     const pkBody = JSON.stringify({
-      project: CONFIG.PAKASIR_PROJECT,
-      order_id, amount,
-      description: `Topup DzzXNzz - ${user.username}`,
-      customer: user.username,
+      project:  CONFIG.PAKASIR_PROJECT,
+      order_id,
+      amount,
+      api_key:  CONFIG.PAKASIR_API_KEY,
     });
 
     const pkResult = await new Promise((resolve, reject) => {
@@ -108,7 +108,6 @@ app.post('/api/create-transaction', auth, async (req, res) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + CONFIG.PAKASIR_API_KEY,
           'Content-Length': Buffer.byteLength(pkBody),
         }
       };
