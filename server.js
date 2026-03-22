@@ -130,13 +130,18 @@ app.post('/api/create-transaction', auth, async (req, res) => {
       return res.status(502).json({ error: 'Gagal buat transaksi QRIS', detail: pkResult.data });
     }
 
-    const pkData = pkResult.data;
+    const pkData = pkResult.data?.payment || pkResult.data || {};
+    // Pakasir bisa kirim QR di berbagai field
+    const qr_string = pkData.payment_number || pkData.qr_string || pkData.qr_code || pkData.data?.qr_string || null;
+    const qr_image  = pkData.qr_image  || pkData.data?.qr_image  || null;
+    console.log('[QR] qr_string:', qr_string?.substring(0,50), 'qr_image:', qr_image?.substring(0,50));
+
     const tx = {
       order_id, user_id: user.id, username: user.username, amount,
       status: 'pending',
-      qr_string:   pkData.qr_string  || pkData.data?.qr_string  || null,
-      qr_image:    pkData.qr_image   || pkData.data?.qr_image   || null,
-      pakasir_ref: pkData.ref        || pkData.data?.ref        || null,
+      qr_string,
+      qr_image,
+      pakasir_ref: pkData.ref || pkData.order_id || null,
       created_at:  new Date().toISOString(),
       expires_at:  new Date(Date.now() + 5 * 60 * 1000).toISOString(),
     };
