@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bayar QRIS - DzzXNzz</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/style-extra.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Righteous&display=swap" rel="stylesheet">
+    <style>
+        @keyframes fadeInUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes shineBar { 0%{background-position:0%} 100%{background-position:200%} }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+        @keyframes spin { to{transform:rotate(360deg)} }
+
+        .pay-wrapper {
+            max-width: 480px; margin: 0 auto; animation: fadeInUp 0.6s ease;
+            padding: 0 16px 40px;
+        }
+
+        .pay-card {
+            background: rgba(13,15,25,0.92);
+            backdrop-filter: blur(20px);
+            border-radius: 24px; padding: 32px 24px;
+            border: 1px solid rgba(0,229,255,0.2);
+            box-shadow: 0 0 40px rgba(0,229,255,0.08), 0 20px 60px rgba(0,0,0,0.5);
+            position: relative; overflow: hidden;
+            text-align: center;
+        }
+        .pay-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, #00e5ff, #00ff88, #bf00ff, #00e5ff);
+            background-size: 200% 100%; animation: shineBar 3s linear infinite;
+        }
+
+        .pay-title {
+            font-family: 'Righteous', cursive; font-size: 20px; color: #fff;
+            margin-bottom: 4px;
+        }
+        .pay-subtitle { font-size: 13px; color: rgba(255,255,255,0.4); font-weight: 700; margin-bottom: 24px; }
+
+        .pay-amount {
+            font-family: 'Righteous', cursive; font-size: 36px;
+            background: linear-gradient(135deg, #00e5ff, #00ff88);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 14px rgba(0,229,255,0.4));
+            margin-bottom: 20px;
+        }
+
+        .qr-wrap {
+            background: #fff; border-radius: 20px; padding: 16px;
+            display: inline-block; margin-bottom: 20px;
+            box-shadow: 0 0 40px rgba(0,229,255,0.3);
+        }
+        .qr-wrap img { display: block; width: 220px; height: 220px; border-radius: 8px; }
+        .qr-loading {
+            width: 220px; height: 220px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px; color: rgba(0,0,0,0.2);
+        }
+
+        .timer-section { margin-bottom: 20px; }
+        .timer-label { font-size: 12px; color: rgba(255,255,255,0.4); font-weight: 700; margin-bottom: 8px; }
+        .timer-count { font-family: 'Righteous', cursive; font-size: 28px; color: #00e5ff; margin-bottom: 10px; }
+        .timer-count.urgent { color: #ff6666; animation: pulse 1s ease infinite; }
+        .timer-bar-bg { background: rgba(255,255,255,0.08); border-radius: 4px; height: 4px; overflow: hidden; }
+        .timer-bar-fill {
+            height: 100%; background: linear-gradient(90deg, #00e5ff, #00ff88);
+            border-radius: 4px; transition: width 1s linear; width: 100%;
+        }
+
+        .order-info {
+            display: flex; justify-content: space-between;
+            background: rgba(0,0,0,0.25); border-radius: 12px;
+            padding: 12px 16px; margin-bottom: 20px; text-align: left;
+        }
+        .order-info div { font-size: 12px; }
+        .order-info .lbl { color: rgba(255,255,255,0.35); font-weight: 700; margin-bottom: 3px; }
+        .order-info .val { color: #fff; font-weight: 900; font-size: 13px; }
+
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 18px; border-radius: 30px; font-size: 13px; font-weight: 800;
+            margin-bottom: 20px;
+        }
+        .status-badge.waiting {
+            background: rgba(255,224,0,0.08); border: 1px solid rgba(255,224,0,0.3);
+            color: #ffe000;
+        }
+        .status-badge.success {
+            background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.35);
+            color: #00ff88;
+        }
+        .status-badge.failed, .status-badge.expired {
+            background: rgba(255,0,0,0.08); border: 1px solid rgba(255,0,0,0.2);
+            color: #ff6666;
+        }
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: currentColor;
+            animation: pulse 1.5s ease infinite;
+        }
+        .status-badge.success .status-dot,
+        .status-badge.failed .status-dot { animation: none; }
+
+        .hint-text {
+            font-size: 12px; color: rgba(255,255,255,0.3); font-weight: 700;
+            line-height: 1.6; margin-bottom: 20px;
+        }
+
+        .pay-btn {
+            width: 100%; padding: 15px;
+            background: linear-gradient(135deg, #00e5ff, #00ff88);
+            border: none; border-radius: 14px; color: #06070f;
+            font-weight: 900; font-size: 15px; cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            box-shadow: 0 6px 24px rgba(0,229,255,0.35);
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: 0.25s; text-decoration: none;
+        }
+        .pay-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(0,229,255,0.5); }
+
+        .back-link {
+            display: block; text-align: center; margin-top: 14px;
+            color: rgba(255,255,255,0.3); font-size: 13px; font-weight: 700;
+            text-decoration: none; transition: 0.2s;
+        }
+        .back-link:hover { color: #00e5ff; }
+
+        /* Success overlay */
+        .success-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999; opacity: 0; visibility: hidden; transition: 0.4s;
+        }
+        .success-overlay.show { opacity: 1; visibility: visible; }
+        .success-icon {
+            width: 100px; height: 100px; border-radius: 50%;
+            background: rgba(0,255,136,0.12); border: 3px solid #00ff88;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 48px; margin-bottom: 20px;
+            animation: fadeInUp 0.5s ease;
+            box-shadow: 0 0 40px rgba(0,255,136,0.4);
+        }
+        .success-title {
+            font-family: 'Righteous', cursive; font-size: 26px;
+            color: #00ff88; margin-bottom: 8px; animation: fadeInUp 0.5s 0.1s ease both;
+        }
+        .success-sub {
+            font-size: 14px; color: rgba(255,255,255,0.5); font-weight: 700;
+            animation: fadeInUp 0.5s 0.2s ease both; margin-bottom: 28px;
+        }
+        .success-coins {
+            font-family: 'Righteous', cursive; font-size: 40px;
+            background: linear-gradient(135deg, #ffe000, #ff8800);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: fadeInUp 0.5s 0.3s ease both; margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<nav class="navbar">
+    <div class="nav-left"><button id="menu-toggle">☰</button></div>
+    <div class="nav-right">
+        <a href="/isisaldo" class="coins-nav">🪙 <span id="coinCount">0</span></a>
+        <div class="user-avatar"><span class="nav-initial" id="navInitial">?</span></div>
+    </div>
+</nav>
+
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <span class="user-name-text">DzzXNzz</span>
+        <div class="sidebar-pfp"><img src="/image/image.jpg" alt="DzzXNzz" onerror="this.src='https://ui-avatars.com/api/?name=DzzXNzz&background=06070f&color=00e5ff&bold=true'"></div>
+    </div>
+    <ul class="sidebar-menu">
+        <li><a href="/"><i class="fas fa-home"></i> Home</a></li>
+        <li><a href="/product"><i class="fas fa-shopping-cart"></i> Product</a></li>
+        <li class="active"><a href="/isisaldo"><i class="fas fa-wallet"></i> Isi Saldo</a></li>
+        <li><a href="/contact"><i class="fas fa-phone-alt"></i> Contact</a></li>
+    </ul>
+    <div class="sidebar-divider"></div>
+    <ul class="sidebar-menu" id="sidebarAuthMenu"></ul>
+</div>
+<div class="overlay" id="overlay"></div>
+
+<main class="main-content">
+    <div class="pay-wrapper">
+        <div class="pay-card" id="payCard">
+            <div class="pay-title">📲 Scan & Bayar QRIS</div>
+            <div class="pay-subtitle">Gunakan aplikasi m-banking atau e-wallet favorit kamu</div>
+
+            <div class="pay-amount" id="payAmount">Rp -</div>
+
+            <!-- Status badge -->
+            <div class="status-badge waiting" id="statusBadge">
+                <div class="status-dot"></div>
+                <span id="statusText">Menunggu Pembayaran</span>
+            </div>
+
+            <!-- QR Image -->
+            <div class="qr-wrap" id="qrWrap">
+                <div class="qr-loading">⏳</div>
+            </div>
+
+            <!-- Timer -->
+            <div class="timer-section" id="timerSection">
+                <div class="timer-label">Waktu tersisa</div>
+                <div class="timer-count" id="timerCount">05:00</div>
+                <div class="timer-bar-bg">
+                    <div class="timer-bar-fill" id="timerBar"></div>
+                </div>
+            </div>
+
+            <!-- Order info -->
+            <div class="order-info" id="orderInfo">
+                <div>
+                    <div class="lbl">Order ID</div>
+                    <div class="val" id="orderId">-</div>
+                </div>
+                <div style="text-align:right">
+                    <div class="lbl">Coins Masuk</div>
+                    <div class="val" id="coinsIn">-</div>
+                </div>
+            </div>
+
+            <p class="hint-text">
+                ✅ Pembayaran otomatis terdeteksi via webhook<br>
+                🔁 Status diperbarui tiap 5 detik<br>
+                ⏱️ QR berlaku 5 menit sejak dibuat
+            </p>
+
+            <a href="/isisaldo" class="pay-btn">
+                <i class="fas fa-plus-circle"></i> Top Up Lagi
+            </a>
+            <a href="/" class="back-link">← Kembali ke Beranda</a>
+        </div>
+    </div>
+</main>
+
+<!-- Success overlay -->
+<div class="success-overlay" id="successOverlay">
+    <div class="success-icon">✅</div>
+    <div class="success-title">Pembayaran Berhasil!</div>
+    <div class="success-sub">Coins sudah masuk ke akun kamu</div>
+    <div class="success-coins" id="successCoins">🪙 +0</div>
+    <a href="/isisaldo" class="pay-btn" style="width:auto;padding:14px 32px">
+        <i class="fas fa-wallet"></i> Lihat Saldo
+    </a>
+</div>
+
+<script src="/config.js"></script>
+<script src="/auth.js"></script>
+<script src="/script.js"></script>
+<script>
+// Ambil order_id dari URL: /isisaldo/ORDER_ID
+const pathParts = window.location.pathname.split('/');
+const ORDER_ID = pathParts[pathParts.length - 1];
+
+let timerInterval = null;
+let pollInterval = null;
+let timerTotal = 300; // 5 menit
+let timerLeft = 300;
+let paid = false;
+
+async function loadTransaction() {
+    if (!ORDER_ID) { window.location.href = '/isisaldo'; return; }
+
+    try {
+        const res = await fetch(`/api/transaction/${ORDER_ID}`, {
+            headers: { 'Authorization': 'Bearer ' + Auth.getToken() }
+        });
+        if (!res.ok) { window.location.href = '/isisaldo'; return; }
+        const data = await res.json();
+
+        // Set amount
+        document.getElementById('payAmount').textContent = 'Rp ' + Number(data.amount).toLocaleString('id-ID');
+        document.getElementById('orderId').textContent = ORDER_ID;
+        document.getElementById('coinsIn').textContent = '🪙 +' + Number(data.amount).toLocaleString('id-ID');
+
+        // Set QR image
+        if (data.qr_image) {
+            document.getElementById('qrWrap').innerHTML = `<img src="${data.qr_image}" alt="QRIS">`;
+        } else if (data.qr_string) {
+            // Generate QR from string using QR API
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(data.qr_string)}`;
+            document.getElementById('qrWrap').innerHTML = `<img src="${qrUrl}" alt="QRIS">`;
+        }
+
+        // Hitung timer berdasarkan created_at
+        if (data.created_at) {
+            const created = new Date(data.created_at).getTime();
+            const now = Date.now();
+            const elapsed = Math.floor((now - created) / 1000);
+            timerLeft = Math.max(0, timerTotal - elapsed);
+        }
+
+        updateStatus(data.status, data.amount);
+        if (data.status === 'pending') {
+            startTimer();
+            startPolling();
+        }
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+function updateStatus(status, amount) {
+    const badge = document.getElementById('statusBadge');
+    const text  = document.getElementById('statusText');
+    badge.className = 'status-badge';
+
+    if (status === 'paid' || status === 'success') {
+        badge.classList.add('success');
+        text.textContent = 'Pembayaran Berhasil!';
+        paid = true;
+        stopPolling();
+        stopTimer();
+        document.getElementById('timerSection').style.display = 'none';
+        showSuccess(amount);
+    } else if (status === 'expired') {
+        badge.classList.add('expired');
+        text.textContent = 'QR Kedaluwarsa';
+        stopPolling(); stopTimer();
+        document.getElementById('qrWrap').innerHTML = '<div style="width:220px;height:220px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#ff6666;font-weight:800">QR EXPIRED</div>';
+        document.getElementById('timerSection').style.display = 'none';
+    } else if (status === 'failed') {
+        badge.classList.add('failed');
+        text.textContent = 'Pembayaran Gagal';
+        stopPolling(); stopTimer();
+    } else {
+        badge.classList.add('waiting');
+        text.textContent = 'Menunggu Pembayaran';
+    }
+}
+
+function startTimer() {
+    clearInterval(timerInterval);
+    renderTimer();
+    timerInterval = setInterval(() => {
+        timerLeft--;
+        renderTimer();
+        if (timerLeft <= 0) {
+            stopTimer();
+            if (!paid) updateStatus('expired');
+        }
+    }, 1000);
+}
+
+function renderTimer() {
+    const m = Math.floor(timerLeft / 60).toString().padStart(2, '0');
+    const s = (timerLeft % 60).toString().padStart(2, '0');
+    const el = document.getElementById('timerCount');
+    el.textContent = `${m}:${s}`;
+    el.className = 'timer-count' + (timerLeft <= 30 ? ' urgent' : '');
+    const pct = (timerLeft / timerTotal) * 100;
+    document.getElementById('timerBar').style.width = pct + '%';
+    if (pct < 30) document.getElementById('timerBar').style.background = 'linear-gradient(90deg,#ff6666,#ff9900)';
+}
+
+function stopTimer() { clearInterval(timerInterval); }
+
+async function startPolling() {
+    clearInterval(pollInterval);
+    pollInterval = setInterval(async () => {
+        if (paid) return stopPolling();
+        try {
+            const res = await fetch(`/api/transaction/${ORDER_ID}/status`, {
+                headers: { 'Authorization': 'Bearer ' + Auth.getToken() }
+            });
+            const data = await res.json();
+            if (data.status && data.status !== 'pending') {
+                updateStatus(data.status, data.amount);
+            }
+        } catch(e) {}
+    }, 5000);
+}
+
+function stopPolling() { clearInterval(pollInterval); }
+
+function showSuccess(amount) {
+    document.getElementById('successCoins').textContent = '🪙 +' + Number(amount).toLocaleString('id-ID');
+    document.getElementById('successOverlay').classList.add('show');
+    // Refresh saldo navbar
+    Auth.getProfile(true).then(p => {
+        if (p) {
+            const coinEl = document.getElementById('coinCount');
+            if (coinEl) coinEl.textContent = Number(p.coins).toLocaleString('id-ID');
+        }
+    });
+    // Auto redirect setelah 4 detik
+    setTimeout(() => { window.location.href = '/isisaldo'; }, 4000);
+}
+
+// Init
+if (!Auth.isLoggedIn()) { window.location.href = '/login'; }
+else { loadTransaction(); }
+</script>
+</body>
+</html>

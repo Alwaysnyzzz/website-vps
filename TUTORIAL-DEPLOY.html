@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutorial Deploy VPS — DzzXNzz</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Righteous&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cyan:   #00e5ff;
+  --green:  #00ff88;
+  --purple: #bf00ff;
+  --red:    #ff5555;
+  --yellow: #ffe000;
+  --bg:     #06070f;
+  --card:   rgba(12,14,24,0.97);
+  --border: rgba(0,229,255,0.15);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  color: rgba(255,255,255,0.82);
+  line-height: 1.7;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0a0b15; }
+::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.3); border-radius: 3px; }
+
+/* ── HERO ── */
+.hero {
+  background: radial-gradient(ellipse at 30% 0%, rgba(0,229,255,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 100%, rgba(191,0,255,0.06) 0%, transparent 50%),
+              var(--bg);
+  padding: 60px 24px 50px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--cyan), var(--green), var(--purple), var(--cyan));
+  background-size: 200% 100%;
+  animation: shine 4s linear infinite;
+}
+@keyframes shine { to { background-position: 200% 0; } }
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(0,229,255,0.07); border: 1px solid rgba(0,229,255,0.2);
+  border-radius: 30px; padding: 6px 16px; font-size: 12px;
+  font-weight: 800; color: var(--cyan); letter-spacing: 1px;
+  text-transform: uppercase; margin-bottom: 20px;
+}
+.hero h1 {
+  font-family: 'Righteous', cursive;
+  font-size: clamp(28px, 6vw, 48px);
+  background: linear-gradient(135deg, #fff 0%, var(--cyan) 50%, var(--green) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 14px; line-height: 1.15;
+}
+.hero p {
+  font-size: 15px; color: rgba(255,255,255,0.45); font-weight: 700;
+  max-width: 520px; margin: 0 auto 28px;
+}
+.hero-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.hero-tag {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px; padding: 5px 14px;
+  font-size: 12px; font-weight: 800; color: rgba(255,255,255,0.4);
+}
+
+/* ── LAYOUT ── */
+.container { max-width: 860px; margin: 0 auto; padding: 0 20px; }
+
+/* ── TOC ── */
+.toc {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 24px 28px; margin: 36px auto;
+  max-width: 860px;
+}
+.toc-title {
+  font-family: 'Righteous', cursive; font-size: 16px;
+  color: var(--cyan); margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+}
+.toc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 6px; }
+.toc-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: 10px; text-decoration: none;
+  color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 700;
+  transition: 0.2s; border: 1px solid transparent;
+}
+.toc-item:hover { background: rgba(0,229,255,0.07); border-color: rgba(0,229,255,0.15); color: var(--cyan); }
+.toc-num {
+  width: 22px; height: 22px; border-radius: 6px;
+  background: rgba(0,229,255,0.1); color: var(--cyan);
+  font-size: 11px; font-weight: 900; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── SECTION ── */
+.section { margin-bottom: 48px; }
+.section-header {
+  display: flex; align-items: flex-start; gap: 16px;
+  margin-bottom: 20px;
+}
+.step-num {
+  width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Righteous', cursive; font-size: 18px;
+  background: linear-gradient(135deg, rgba(0,229,255,0.15), rgba(0,255,136,0.08));
+  border: 1.5px solid rgba(0,229,255,0.3);
+  color: var(--cyan);
+}
+.section-title-wrap {}
+.section-title {
+  font-family: 'Righteous', cursive; font-size: 22px;
+  color: #fff; margin-bottom: 3px;
+}
+.section-desc { font-size: 13px; color: rgba(255,255,255,0.4); font-weight: 700; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 18px; padding: 22px 24px; margin-bottom: 14px;
+}
+.card-title {
+  font-size: 13px; font-weight: 900; color: var(--cyan);
+  letter-spacing: 0.5px; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-title::before {
+  content: ''; width: 3px; height: 14px; border-radius: 2px;
+  background: linear-gradient(180deg, var(--cyan), var(--green));
+}
+
+/* ── CODE BLOCKS ── */
+.code-block {
+  background: #020308; border: 1px solid rgba(0,229,255,0.12);
+  border-radius: 14px; overflow: hidden; margin-bottom: 10px;
+}
+.code-header {
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(0,229,255,0.05); padding: 9px 16px;
+  border-bottom: 1px solid rgba(0,229,255,0.08);
+}
+.code-lang {
+  font-size: 11px; font-weight: 800; color: var(--cyan);
+  letter-spacing: 1px; text-transform: uppercase;
+}
+.copy-btn {
+  font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.3);
+  background: none; border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px; padding: 3px 10px; cursor: pointer;
+  transition: 0.2s; font-family: 'Nunito', sans-serif;
+}
+.copy-btn:hover { color: var(--green); border-color: rgba(0,255,136,0.3); }
+.copy-btn.copied { color: var(--green); border-color: rgba(0,255,136,0.4); }
+
+pre {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px; padding: 16px 18px;
+  color: rgba(255,255,255,0.75); overflow-x: auto;
+  line-height: 1.7; white-space: pre;
+}
+pre .c  { color: rgba(255,255,255,0.25); } /* comment */
+pre .k  { color: var(--cyan); }            /* keyword/command */
+pre .s  { color: var(--green); }           /* string/value */
+pre .v  { color: #ff9944; }               /* variable */
+pre .h  { color: var(--yellow); }         /* highlight */
+
+/* ── INFO / WARNING / SUCCESS BOX ── */
+.info-box {
+  display: flex; align-items: flex-start; gap: 14px;
+  border-radius: 14px; padding: 14px 18px; margin-bottom: 12px;
+}
+.info-box.info  { background: rgba(0,229,255,0.06); border: 1px solid rgba(0,229,255,0.2); }
+.info-box.warn  { background: rgba(255,224,0,0.06); border: 1px solid rgba(255,224,0,0.25); }
+.info-box.danger{ background: rgba(255,60,60,0.06); border: 1px solid rgba(255,60,60,0.2); }
+.info-box.success{background: rgba(0,255,136,0.06); border: 1px solid rgba(0,255,136,0.2); }
+.info-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.info-text { font-size: 13px; font-weight: 700; line-height: 1.7; }
+.info-box.info   .info-text { color: rgba(0,229,255,0.8); }
+.info-box.warn   .info-text { color: rgba(255,224,0,0.8); }
+.info-box.danger .info-text { color: rgba(255,100,100,0.85); }
+.info-box.success .info-text { color: rgba(0,255,136,0.85); }
+
+/* ── CHECKLIST ── */
+.checklist { list-style: none; padding: 0; }
+.checklist li {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 0; font-size: 13px; font-weight: 700;
+  color: rgba(255,255,255,0.65);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.checklist li:last-child { border-bottom: none; }
+.check-icon { color: var(--green); flex-shrink: 0; margin-top: 2px; }
+
+/* ── FLOW DIAGRAM ── */
+.flow {
+  display: flex; flex-direction: column; gap: 0;
+  margin-bottom: 14px;
+}
+.flow-item {
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px; padding: 13px 18px;
+  font-size: 13px; font-weight: 800;
+}
+.flow-item + .flow-item { margin-top: 2px; border-radius: 12px; }
+.flow-icon { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 15px; }
+.flow-icon.cyan   { background: rgba(0,229,255,0.12); }
+.flow-icon.green  { background: rgba(0,255,136,0.1); }
+.flow-icon.purple { background: rgba(191,0,255,0.1); }
+.flow-icon.yellow { background: rgba(255,224,0,0.1); }
+.flow-arrow { text-align: center; color: rgba(255,255,255,0.15); font-size: 18px; padding: 2px 0; }
+
+/* ── FILE TREE ── */
+.file-tree {
+  font-family: 'Share Tech Mono', monospace; font-size: 13px;
+  background: #020308; border: 1px solid rgba(0,229,255,0.12);
+  border-radius: 14px; padding: 20px 22px;
+  line-height: 1.9; color: rgba(255,255,255,0.6);
+}
+.file-tree .dir  { color: var(--cyan); font-weight: 700; }
+.file-tree .file { color: rgba(255,255,255,0.55); }
+.file-tree .note { color: rgba(255,255,255,0.2); font-size: 12px; }
+.file-tree .new  { color: var(--green); }
+
+/* ── DIVIDER ── */
+.divider {
+  height: 1px; margin: 40px 0;
+  background: linear-gradient(90deg, transparent, rgba(0,229,255,0.15), transparent);
+}
+
+/* ── TABLE ── */
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th {
+  text-align: left; padding: 10px 14px; font-size: 11px;
+  font-weight: 900; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--cyan); border-bottom: 1px solid rgba(0,229,255,0.15);
+}
+.tbl td {
+  padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.65); font-weight: 700; vertical-align: top;
+}
+.tbl tr:last-child td { border-bottom: none; }
+.tbl td:first-child { font-family: 'Share Tech Mono', monospace; color: var(--green); font-size: 12px; }
+
+/* ── FOOTER ── */
+.footer {
+  text-align: center; padding: 40px 20px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.2); font-size: 13px; font-weight: 700;
+}
+.footer span { color: var(--cyan); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  pre { font-size: 11.5px; }
+  .section-header { flex-direction: row; }
+  .card { padding: 18px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">📖 Dokumentasi Lengkap</div>
+  <h1>Deploy DzzXNzz ke VPS<br>dari Nol</h1>
+  <p>Panduan langkah demi langkah mulai dari setup server Ubuntu baru hingga website live dengan backend Pakasir QRIS</p>
+  <div class="hero-tags">
+    <span class="hero-tag">Ubuntu 22.04</span>
+    <span class="hero-tag">Nginx</span>
+    <span class="hero-tag">Node.js 20</span>
+    <span class="hero-tag">PM2</span>
+    <span class="hero-tag">Supabase</span>
+    <span class="hero-tag">Pakasir QRIS</span>
+    <span class="hero-tag">Webhook</span>
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="container">
+<div class="toc">
+  <div class="toc-title">📋 Daftar Isi</div>
+  <div class="toc-grid">
+    <a href="#s1" class="toc-item"><div class="toc-num">1</div> Persiapan & Koneksi SSH</a>
+    <a href="#s2" class="toc-item"><div class="toc-num">2</div> Install Nginx & Node.js</a>
+    <a href="#s3" class="toc-item"><div class="toc-num">3</div> Upload File Frontend</a>
+    <a href="#s4" class="toc-item"><div class="toc-num">4</div> Setup Backend Node.js</a>
+    <a href="#s5" class="toc-item"><div class="toc-num">5</div> Konfigurasi Supabase</a>
+    <a href="#s6" class="toc-item"><div class="toc-num">6</div> Setup Nginx + Proxy</a>
+    <a href="#s7" class="toc-item"><div class="toc-num">7</div> Jalankan dengan PM2</a>
+    <a href="#s8" class="toc-item"><div class="toc-num">8</div> Setup Webhook Pakasir</a>
+    <a href="#s9" class="toc-item"><div class="toc-num">9</div> Test & Verifikasi</a>
+    <a href="#s10" class="toc-item"><div class="toc-num">10</div> Troubleshooting</a>
+  </div>
+</div>
+
+<!-- FLOW OVERVIEW -->
+<div class="card" style="margin-bottom:40px">
+  <div class="card-title">Alur Sistem Secara Keseluruhan</div>
+  <div class="flow">
+    <div class="flow-item"><div class="flow-icon cyan">🌐</div> User buka website → Nginx serve file HTML/CSS/JS</div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-item"><div class="flow-icon green">💳</div> User klik Top Up → Frontend POST ke <code style="color:#00e5ff">/api/create-transaction</code></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-item"><div class="flow-icon yellow">⚡</div> Backend kirim request ke Pakasir → dapat QR QRIS</div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-item"><div class="flow-icon cyan">📱</div> User scan QR & bayar → Pakasir terima pembayaran</div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-item"><div class="flow-icon purple">🔔</div> Pakasir kirim webhook ke <code style="color:#00e5ff">/api/webhook/pakasir</code></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-item"><div class="flow-icon green">✅</div> Backend update Supabase: status paid + tambah coins user</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ── STEP 1 ── -->
+<div class="section" id="s1">
+  <div class="section-header">
+    <div class="step-num">1</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Persiapan & Koneksi SSH</div>
+      <div class="section-desc">Hal-hal yang dibutuhkan sebelum mulai</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Yang Kamu Butuhkan</div>
+    <ul class="checklist">
+      <li><span class="check-icon">✓</span> VPS dengan OS Ubuntu 22.04 LTS (minimal 1 CPU, 512MB RAM)</li>
+      <li><span class="check-icon">✓</span> IP publik VPS (contoh: <code style="color:var(--cyan)">123.456.789.0</code>)</li>
+      <li><span class="check-icon">✓</span> Akses root atau user dengan sudo</li>
+      <li><span class="check-icon">✓</span> Akun Supabase (gratis di supabase.com)</li>
+      <li><span class="check-icon">✓</span> Akun Pakasir (app.pakasir.com) dengan project aktif</li>
+      <li><span class="check-icon">✓</span> Terminal / CMD / PowerShell di komputer kamu</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Koneksi SSH ke VPS</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash — di komputer kamu</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="c"># Format: ssh username@IP_VPS</span>
+<span class="k">ssh</span> root@<span class="v">123.456.789.0</span>
+
+<span class="c"># Kalau pakai file key (.pem)</span>
+<span class="k">ssh</span> -i /path/to/key.pem root@<span class="v">123.456.789.0</span>
+
+<span class="c"># Jika muncul "Are you sure?" ketik:</span>
+yes</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Update sistem dulu</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash — di VPS</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="k">apt</span> update && <span class="k">apt</span> upgrade -y
+<span class="k">apt</span> install -y curl wget git unzip nano ufw</pre>
+    </div>
+  </div>
+
+  <div class="info-box warn">
+    <div class="info-icon">⚠️</div>
+    <div class="info-text">Semua perintah di bawah ini dijalankan di dalam VPS (setelah SSH), kecuali ditulis "di komputer kamu".</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ── STEP 2 ── -->
+<div class="section" id="s2">
+  <div class="section-header">
+    <div class="step-num">2</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Install Nginx & Node.js</div>
+      <div class="section-desc">Web server dan runtime JavaScript</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Install Nginx</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="k">apt</span> install -y nginx
+
+<span class="c"># Aktifkan nginx otomatis saat boot</span>
+<span class="k">systemctl</span> enable nginx
+<span class="k">systemctl</span> start nginx
+
+<span class="c"># Cek sudah jalan</span>
+<span class="k">systemctl</span> status nginx
+<span class="c"># Harus ada: ● nginx.service — Active: active (running)</span></pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Install Node.js 20 (via NodeSource)</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="c"># Tambah repo Node.js 20</span>
+<span class="k">curl</span> -fsSL https://deb.nodesource.com/setup_20.x | <span class="k">bash</span> -
+
+<span class="k">apt</span> install -y nodejs
+
+<span class="c"># Verifikasi versi</span>
+<span class="k">node</span> -v    <span class="c"># harus: v20.x.x</span>
+<span class="k">npm</span>  -v    <span class="c"># harus: 10.x.x</span></pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Install PM2 (Process Manager)</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="k">npm</span> install -g pm2
+
+<span class="c"># Verifikasi</span>
+<span class="k">pm2</span> -v</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Setup Firewall (UFW)</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="k">ufw</span> allow OpenSSH
+<span class="k">ufw</span> allow <span class="s">'Nginx Full'</span>
+<span class="k">ufw</span> --force enable
+
+<span class="c"># Cek status</span>
+<span class="k">ufw</span> status</pre>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ── STEP 3 ── -->
+<div class="section" id="s3">
+  <div class="section-header">
+    <div class="step-num">3</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Upload File Frontend</div>
+      <div class="section-desc">Salin semua file HTML/CSS/JS ke VPS</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Buat folder dan set permission</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash — di VPS</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="c"># Buat folder web root</span>
+<span class="k">mkdir</span> -p /var/www/html
+
+<span class="c"># Set ownership ke current user</span>
+<span class="k">chown</span> -R $USER:$USER /var/www/html
+<span class="k">chmod</span> -R 755 /var/www/html</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Upload file dari komputer kamu (pilih salah satu cara)</div>
+
+    <p style="font-size:12px;font-weight:800;color:rgba(0,229,255,0.5);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Cara A — SCP (Terminal)</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash — di komputer kamu</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="c"># Upload semua file frontend sekaligus</span>
+<span class="k">scp</span> index.html login.html register.html \
+    isisaldo.html isisaldo-pay.html pay.html \
+    style.css style-extra.css loading.css \
+    config.js auth.js script.js \
+    root@<span class="v">123.456.789.0</span>:/var/www/html/
+
+<span class="c"># Upload folder image (kalau ada)</span>
+<span class="k">scp</span> -r image/ root@<span class="v">123.456.789.0</span>:/var/www/html/image/</pre>
+    </div>
+
+    <p style="font-size:12px;font-weight:800;color:rgba(0,229,255,0.5);letter-spacing:1px;text-transform:uppercase;margin:14px 0 10px">Cara B — Unzip langsung di VPS</p>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="c"># Upload zip dulu via scp</span>
+<span class="k">scp</span> vps-web-updated.zip root@<span class="v">123.456.789.0</span>:/root/
+
+<span class="c"># Di VPS: extract ke web root</span>
+<span class="k">cd</span> /root
+<span class="k">unzip</span> vps-web-updated.zip
+<span class="k">cp</span> -r vps-output/. /var/www/html/
+<span class="c"># JANGAN copy server.js, package.json ke /var/www/html!</span></pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Struktur akhir /var/www/html/</div>
+    <div class="file-tree">
+/var/www/html/<br>
+├── <span class="dir">image/</span>                 <span class="note">← foto profil dll</span><br>
+├── <span class="file">index.html</span><br>
+├── <span class="file">login.html</span><br>
+├── <span class="file">register.html</span><br>
+├── <span class="new">isisaldo.html</span>         <span class="note">← form top up (baru)</span><br>
+├── <span class="new">isisaldo-pay.html</span>     <span class="note">← halaman QRIS (baru)</span><br>
+├── <span class="new">pay.html</span>              <span class="note">← payment QR dihias (baru)</span><br>
+├── <span class="file">style.css</span><br>
+├── <span class="file">style-extra.css</span><br>
+├── <span class="file">loading.css</span><br>
+├── <span class="file">config.js</span><br>
+├── <span class="file">auth.js</span><br>
+└── <span class="file">script.js</span>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ── STEP 4 ── -->
+<div class="section" id="s4">
+  <div class="section-header">
+    <div class="step-num">4</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Setup Backend Node.js</div>
+      <div class="section-desc">Install dependencies dan konfigurasi environment</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Buat folder backend dan copy file</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="k">mkdir</span> -p /var/www/backend
+<span class="k">cd</span> /var/www/backend
+
+<span class="c"># Copy dari hasil extract zip</span>
+<span class="k">cp</span> /root/vps-output/server.js .
+<span class="k">cp</span> /root/vps-output/package.json .</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Install dependencies</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="k">cd</span> /var/www/backend
+<span class="k">npm</span> install
+
+<span class="c"># Seharusnya muncul: added XX packages</span></pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Buat file .env</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="k">nano</span> /var/www/backend/.env</pre>
+    </div>
+    <div class="code-block" style="margin-top:8px">
+      <div class="code-header"><span class="code-lang">.env — isi dengan data kamu</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre>PORT=<span class="s">3000</span>
+
+<span class="c"># Supabase — ambil dari supabase.com > Settings > API</span>
+SUPABASE_URL=<span class="s">https://besavhrntlravtegavtk.supabase.co</span>
+SUPABASE_ANON=<span class="s">eyJhbGci...</span>
+SUPABASE_SERVICE=<span class="h">GANTI_DENGAN_SERVICE_ROLE_KEY_DARI_SUPABASE</span>
+
+<span class="c"># Pakasir — ambil dari app.pakasir.com</span>
+PAKASIR_PROJECT=<span class="s">toko-digital</span>
+PAKASIR_API_KEY=<span class="s">bFbp3ZZsqOEiXsxZ9nd69CZMWdZHXSNP</span>
+
+<span class="c"># Secret untuk webhook (bebas, tapi harus sama dengan di Pakasir)</span>
+WEBHOOK_SECRET=<span class="s">dzzxnzz-webhook-secret-2026</span></pre>
+    </div>
+    <div class="info-box warn" style="margin-top:10px">
+      <div class="info-icon">⚠️</div>
+      <div class="info-text"><strong>SUPABASE_SERVICE</strong> wajib diisi! Ini yang memberi izin backend untuk update coins user. Ambil di: Supabase → Settings → API → <code>service_role</code> (klik "Reveal").</div>
+    </div>
+    <p style="font-size:12px;color:rgba(255,255,255,0.3);margin-top:8px;font-weight:700">Simpan: Ctrl+O → Enter → Ctrl+X</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Set permission file .env agar aman</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="k">chmod</span> 600 /var/www/backend/.env</pre>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ── STEP 5 ── -->
+<div class="section" id="s5">
+  <div class="section-header">
+    <div class="step-num">5</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Konfigurasi Supabase</div>
+      <div class="section-desc">Buat tabel transactions dan ambil service key</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Buat tabel transactions di Supabase</div>
+    <ol style="padding-left:20px;font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);line-height:2.2">
+      <li>Buka <strong style="color:var(--cyan)">supabase.com</strong> → login → pilih project kamu</li>
+      <li>Klik menu <strong style="color:var(--cyan)">SQL Editor</strong> di sidebar kiri</li>
+      <li>Klik <strong style="color:var(--cyan)">New query</strong></li>
+      <li>Copy-paste isi file <strong style="color:var(--green)">supabase-migration.sql</strong> ke editor</li>
+      <li>Klik tombol <strong style="color:var(--cyan)">RUN</strong></li>
+    </ol>
+    <div class="info-box success" style="margin-top:12px">
+      <div class="info-icon">✅</div>
+      <div class="info-text">Jika berhasil, akan muncul "Success. No rows returned" di bagian bawah.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Ambil Service Role Key</div>
+    <ol style="padding-left:20px;font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);line-height:2.2">
+      <li>Di Supabase, klik <strong style="color:var(--cyan)">Settings</strong> (ikon gear)</li>
+      <li>Pilih <strong style="color:var(--cyan)">API</strong></li>
+      <li>Di bagian <strong style="color:var(--yellow)">Project API keys</strong>, temukan <code style="color:var(--green)">service_role</code></li>
+      <li>Klik <strong style="color:var(--cyan)">Reveal</strong> → Copy key-nya</li>
+      <li>Paste ke <code style="color:var(--green)">SUPABASE_SERVICE=</code> di file .env tadi</li>
+    </ol>
+    <div class="info-box danger" style="margin-top:12px">
+      <div class="info-icon">🔐</div>
+      <div class="info-text">Service Role Key sangat sensitif! Jangan pernah di-commit ke Git atau ditaruh di file frontend yang bisa dibaca publik.</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ── STEP 6 ── -->
+<div class="section" id="s6">
+  <div class="section-header">
+    <div class="step-num">6</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Konfigurasi Nginx</div>
+      <div class="section-desc">Setup web server dan proxy ke backend</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Copy dan terapkan nginx.conf</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="c"># Backup config lama</span>
+<span class="k">cp</span> /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bak
+
+<span class="c"># Copy config baru dari zip kita</span>
+<span class="k">cp</span> /root/vps-output/nginx.conf /etc/nginx/sites-available/default
+
+<span class="c"># Test syntax nginx (PENTING!)</span>
+<span class="k">nginx</span> -t
+<span class="c"># Harus muncul: syntax is ok + test is successful</span>
+
+<span class="c"># Reload nginx</span>
+<span class="k">systemctl</span> reload nginx</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Isi nginx.conf (untuk referensi)</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">nginx</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre>server {
+    listen 80;
+    server_name _;  <span class="c"># ganti dengan domain jika ada</span>
+
+    root /var/www/html;
+    index index.html;
+
+    <span class="c"># Semua /api/* → backend Node.js port 3000</span>
+    location /api/ {
+        proxy_pass         http://127.0.0.1:<span class="s">3000</span>;
+        proxy_http_version 1.1;
+        proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
+        proxy_read_timeout 30s;
+    }
+
+    <span class="c"># Form isi saldo</span>
+    location = /isisaldo {
+        try_files /isisaldo.html =404;
+    }
+
+    <span class="c"># Halaman bayar QRIS (/isisaldo/ORDER-ID)</span>
+    location ~ ^/isisaldo/(.+)$ {
+        try_files /isisaldo-pay.html =404;
+    }
+
+    location = /login    { try_files /login.html =404; }
+    location = /register { try_files /register.html =404; }
+    location = /product  { try_files /product.html =404; }
+
+    location / { try_files $uri $uri/ /index.html; }
+
+    gzip on;
+    gzip_types text/plain text/css application/javascript;
+}</pre>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ── STEP 7 ── -->
+<div class="section" id="s7">
+  <div class="section-header">
+    <div class="step-num">7</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Jalankan Backend dengan PM2</div>
+      <div class="section-desc">Agar backend tetap jalan walau terminal ditutup atau VPS restart</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Start backend</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="k">cd</span> /var/www/backend
+
+<span class="c"># Start dengan PM2</span>
+<span class="k">pm2</span> start server.js --name <span class="s">dzzxnzz-backend</span>
+
+<span class="c"># Lihat status</span>
+<span class="k">pm2</span> status
+<span class="c"># Harus: dzzxnzz-backend | online</span>
+
+<span class="c"># Lihat log real-time</span>
+<span class="k">pm2</span> logs dzzxnzz-backend</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Auto-start saat VPS reboot</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="c"># Generate startup script</span>
+<span class="k">pm2</span> startup
+<span class="c"># Akan muncul perintah, COPY dan jalankan perintah itu</span>
+<span class="c"># Contoh: sudo env PATH=... pm2 startup systemd -u root --hp /root</span>
+
+<span class="c"># Simpan daftar proses PM2 saat ini</span>
+<span class="k">pm2</span> save</pre>
+    </div>
+    <div class="info-box info" style="margin-top:10px">
+      <div class="info-icon">ℹ️</div>
+      <div class="info-text">Setelah <code>pm2 startup</code>, akan ada 1 baris perintah panjang yang muncul. Copy dan jalankan baris itu agar PM2 otomatis start saat VPS restart.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Perintah PM2 yang sering dipakai</div>
+    <table class="tbl">
+      <thead><tr><th>Perintah</th><th>Fungsi</th></tr></thead>
+      <tbody>
+        <tr><td>pm2 status</td><td>Lihat semua proses yang berjalan</td></tr>
+        <tr><td>pm2 logs</td><td>Lihat log semua proses</td></tr>
+        <tr><td>pm2 logs dzzxnzz-backend</td><td>Log backend saja</td></tr>
+        <tr><td>pm2 restart dzzxnzz-backend</td><td>Restart backend</td></tr>
+        <tr><td>pm2 stop dzzxnzz-backend</td><td>Stop backend</td></tr>
+        <tr><td>pm2 delete dzzxnzz-backend</td><td>Hapus dari PM2</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ── STEP 8 ── -->
+<div class="section" id="s8">
+  <div class="section-header">
+    <div class="step-num">8</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Setup Webhook Pakasir</div>
+      <div class="section-desc">Agar Pakasir otomatis notif ke server saat bayar berhasil</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">URL Webhook kamu</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">url</span></div>
+      <pre>http://<span class="v">123.456.789.0</span>/api/webhook/pakasir</pre>
+    </div>
+    <p style="font-size:13px;color:rgba(255,255,255,0.45);font-weight:700;margin-top:8px">Ganti <code style="color:var(--cyan)">123.456.789.0</code> dengan IP VPS kamu.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Cara setup di Pakasir Dashboard</div>
+    <ol style="padding-left:20px;font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);line-height:2.4">
+      <li>Login ke <strong style="color:var(--cyan)">app.pakasir.com</strong></li>
+      <li>Masuk ke project <strong style="color:var(--cyan)">toko-digital</strong></li>
+      <li>Buka menu <strong style="color:var(--cyan)">Settings</strong> atau <strong style="color:var(--cyan)">Webhook</strong></li>
+      <li>Set Webhook URL: <code style="color:var(--green)">http://IP_VPS/api/webhook/pakasir</code></li>
+      <li>Set header secret:
+        <br>Key: <code style="color:var(--cyan)">x-webhook-secret</code>
+        <br>Value: <code style="color:var(--green)">dzzxnzz-webhook-secret-2026</code>
+      </li>
+      <li>Simpan perubahan</li>
+    </ol>
+    <div class="info-box info" style="margin-top:12px">
+      <div class="info-icon">💡</div>
+      <div class="info-text">Nilai <code>WEBHOOK_SECRET</code> di file <code>.env</code> harus sama persis dengan yang kamu set di Pakasir Dashboard.</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ── STEP 9 ── -->
+<div class="section" id="s9">
+  <div class="section-header">
+    <div class="step-num">9</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Test & Verifikasi</div>
+      <div class="section-desc">Pastikan semua berjalan dengan benar</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Test 1 — Cek backend hidup</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash — di VPS atau browser</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="c"># Via curl di VPS</span>
+<span class="k">curl</span> http://localhost:3000/api/health
+
+<span class="c"># Atau buka di browser:</span>
+<span class="c"># http://IP_VPS/api/health</span>
+
+<span class="c"># Response yang benar:</span>
+<span class="s">{"ok":true,"time":"2026-...","server":"DzzXNzz Backend"}</span></pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Test 2 — Cek nginx proxy</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="k">curl</span> http://<span class="v">IP_VPS</span>/api/health
+<span class="c"># Harus dapat response yang sama dengan di atas</span>
+<span class="c"># Kalau dapat 502 Bad Gateway → backend belum jalan</span></pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Test 3 — Cek website bisa diakses</div>
+    <ol style="padding-left:20px;font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);line-height:2.4">
+      <li>Buka browser → <code style="color:var(--cyan)">http://IP_VPS</code> → halaman home muncul ✅</li>
+      <li>Buka <code style="color:var(--cyan)">http://IP_VPS/login</code> → halaman login muncul ✅</li>
+      <li>Login dengan akun yang ada di Supabase ✅</li>
+      <li>Buka <code style="color:var(--cyan)">http://IP_VPS/isisaldo</code> → halaman isi saldo muncul ✅</li>
+      <li>Coba klik Top Up → redirect ke <code style="color:var(--cyan)">/isisaldo/ORDER-ID</code> dengan QR muncul ✅</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Test 4 — Cek webhook (opsional)</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash — simulasi webhook</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="k">curl</span> -X POST http://<span class="v">IP_VPS</span>/api/webhook/pakasir \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -H <span class="s">"x-webhook-secret: dzzxnzz-webhook-secret-2026"</span> \
+  -d <span class="s">'{"order_id":"TEST-123","status":"paid"}'</span>
+
+<span class="c"># Response: {"ok":true} atau {"error":"Transaction not found"}</span>
+<span class="c"># Keduanya berarti endpoint webhook berfungsi</span></pre>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ── STEP 10 ── -->
+<div class="section" id="s10">
+  <div class="section-header">
+    <div class="step-num">10</div>
+    <div class="section-title-wrap">
+      <div class="section-title">Troubleshooting</div>
+      <div class="section-desc">Solusi masalah yang paling sering muncul</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">502 Bad Gateway</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="c"># Backend tidak jalan → cek PM2</span>
+<span class="k">pm2</span> status
+<span class="k">pm2</span> logs dzzxnzz-backend
+
+<span class="c"># Kalau error "MODULE_NOT_FOUND"</span>
+<span class="k">cd</span> /var/www/backend && <span class="k">npm</span> install
+
+<span class="c"># Restart backend</span>
+<span class="k">pm2</span> restart dzzxnzz-backend</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">QR tidak muncul / error saat top up</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="c"># Cek log backend</span>
+<span class="k">pm2</span> logs dzzxnzz-backend --lines 50
+
+<span class="c"># Kemungkinan penyebab:</span>
+<span class="c"># 1. PAKASIR_API_KEY salah → cek di .env</span>
+<span class="c"># 2. PAKASIR_PROJECT salah → cek nama project di pakasir.com</span>
+<span class="c"># 3. .env tidak terbaca → pastikan ada di /var/www/backend/.env</span></pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Coins tidak bertambah setelah bayar</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="c"># Cek log webhook</span>
+<span class="k">pm2</span> logs dzzxnzz-backend | grep WEBHOOK
+
+<span class="c"># Kemungkinan penyebab:</span>
+<span class="c"># 1. SUPABASE_SERVICE kosong → isi di .env lalu restart</span>
+<span class="c"># 2. Webhook URL salah di Pakasir</span>
+<span class="c"># 3. WEBHOOK_SECRET tidak cocok</span>
+
+<span class="c"># Setelah edit .env, WAJIB restart:</span>
+<span class="k">pm2</span> restart dzzxnzz-backend</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Halaman 404 Not Found</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="c"># Cek file ada di web root</span>
+<span class="k">ls</span> /var/www/html/
+
+<span class="c"># Cek nginx config benar</span>
+<span class="k">nginx</span> -t
+
+<span class="c"># Lihat error log nginx</span>
+<span class="k">cat</span> /var/log/nginx/error.log | tail -20</pre>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Cara update file setelah ada perubahan</div>
+    <div class="code-block">
+      <div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <pre><span class="c"># Update file frontend (HTML/CSS/JS)</span>
+<span class="k">scp</span> namafile.html root@<span class="v">IP_VPS</span>:/var/www/html/
+<span class="c"># Tidak perlu restart apapun</span>
+
+<span class="c"># Update server.js backend</span>
+<span class="k">scp</span> server.js root@<span class="v">IP_VPS</span>:/var/www/backend/
+<span class="k">pm2</span> restart dzzxnzz-backend</pre>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- FINAL CHECKLIST -->
+<div class="card" style="margin-bottom:48px">
+  <div class="card-title">✅ Checklist Akhir — Sebelum Declare Live!</div>
+  <ul class="checklist">
+    <li><span class="check-icon">□</span> <code style="color:var(--green)">/api/health</code> mengembalikan <code>{"ok":true}</code></li>
+    <li><span class="check-icon">□</span> Halaman index, login, register bisa dibuka</li>
+    <li><span class="check-icon">□</span> Login dengan akun Supabase berhasil</li>
+    <li><span class="check-icon">□</span> Halaman isisaldo menampilkan saldo coins</li>
+    <li><span class="check-icon">□</span> Klik top up → redirect ke halaman QR dengan QR muncul</li>
+    <li><span class="check-icon">□</span> Timer countdown berjalan mundur</li>
+    <li><span class="check-icon">□</span> Tombol "Cek Status" merespons</li>
+    <li><span class="check-icon">□</span> Tombol "Batalkan" muncul konfirmasi lalu redirect</li>
+    <li><span class="check-icon">□</span> Webhook URL sudah di-set di Pakasir Dashboard</li>
+    <li><span class="check-icon">□</span> PM2 startup sudah dijalankan (auto-start after reboot)</li>
+  </ul>
+</div>
+
+</div><!-- /container -->
+
+<div class="footer">
+  Dibuat untuk <span>DzzXNzz</span> · Stack: Ubuntu + Nginx + Node.js + PM2 + Supabase + Pakasir QRIS
+</div>
+
+<script>
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  const text = pre.innerText || pre.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+</script>
+</body>
+</html>

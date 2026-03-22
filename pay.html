@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pembayaran - DzzXNzz</title>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Righteous&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <style>
+        /* ── KEYFRAMES ─────────────────────────────────────────── */
+        @keyframes fadeInUp   { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes shineBar   { 0%{background-position:0%} 100%{background-position:200%} }
+        @keyframes spin       { to{transform:rotate(360deg)} }
+        @keyframes spinR      { to{transform:rotate(-360deg)} }
+        @keyframes orbPulse   { 0%,100%{box-shadow:0 0 0 0 rgba(0,229,255,0.35),0 0 40px rgba(0,229,255,0.2)} 50%{box-shadow:0 0 0 18px rgba(0,229,255,0),0 0 60px rgba(0,229,255,0.35)} }
+        @keyframes orbPulseRed{ 0%,100%{box-shadow:0 0 0 0 rgba(255,60,60,0.4),0 0 40px rgba(255,60,60,0.2)} 50%{box-shadow:0 0 0 18px rgba(255,60,60,0),0 0 60px rgba(255,60,60,0.4)} }
+        @keyframes rotateRing { to{stroke-dashoffset:0} }
+        @keyframes scanLine   { 0%{top:14px} 100%{top:calc(100% - 14px)} }
+        @keyframes beep       { 0%,100%{opacity:0} 10%,90%{opacity:1} }
+        @keyframes cornerBlink{ 0%,100%{opacity:0.4} 50%{opacity:1} }
+        @keyframes floatDot   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+        @keyframes successPop { 0%{transform:scale(0.4);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+        @keyframes ripple     { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(2.5);opacity:0} }
+        @keyframes slideUp    { from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1} }
+        @keyframes countPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+        @keyframes dashAnim   { to{stroke-dashoffset:0} }
+
+        /* ── BASE ──────────────────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Nunito', sans-serif; background: #06070f; }
+        .navbar #menu-toggle { display: none; }
+        .main-content { padding: 88px 16px 60px; max-width: 460px; margin: 0 auto; }
+
+        /* ── PAYMENT CARD ──────────────────────────────────────── */
+        .payment-card {
+            background: rgba(8,10,22,0.96);
+            backdrop-filter: blur(24px);
+            border-radius: 28px;
+            border: 1px solid rgba(0,229,255,0.18);
+            box-shadow: 0 0 60px rgba(0,229,255,0.08), 0 30px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
+            position: relative; overflow: hidden;
+            animation: fadeInUp 0.7s cubic-bezier(0.22,1,0.36,1) both;
+        }
+
+        /* Top shimmer bar */
+        .card-shimmer {
+            height: 3px; width: 100%;
+            background: linear-gradient(90deg, #00e5ff, #00ff88, #bf00ff, #ff6600, #00e5ff);
+            background-size: 300% 100%;
+            animation: shineBar 4s linear infinite;
+            border-radius: 28px 28px 0 0;
+        }
+
+        .card-inner { padding: 28px 24px 30px; }
+
+        /* Decorative background circles */
+        .card-bg-orb {
+            position: absolute; border-radius: 50%; pointer-events: none;
+            filter: blur(60px); opacity: 0.06;
+        }
+        .card-bg-orb.c1 { width:280px;height:280px;background:#00e5ff;top:-80px;right:-80px; }
+        .card-bg-orb.c2 { width:200px;height:200px;background:#bf00ff;bottom:-60px;left:-60px; }
+
+        /* ── HEADER ─────────────────────────────────────────────── */
+        .pay-header { text-align: center; margin-bottom: 26px; }
+        .pay-label { font-size: 11px; font-weight: 800; color: rgba(0,229,255,0.5); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+        .pay-amount {
+            font-family: 'Righteous', cursive; font-size: 42px;
+            background: linear-gradient(135deg, #fff 0%, #00e5ff 60%, #00ff88 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 20px rgba(0,229,255,0.4));
+            line-height: 1; margin-bottom: 6px;
+        }
+        .pay-order {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 11px; color: rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px; padding: 4px 12px; letter-spacing: 1px;
+        }
+
+        /* ── DIVIDER ────────────────────────────────────────────── */
+        .section-div {
+            height: 1px; margin: 0 -24px 24px;
+            background: linear-gradient(90deg, transparent, rgba(0,229,255,0.15), rgba(0,255,136,0.1), transparent);
+        }
+
+        /* ── COUNTDOWN TIMER ─────────────────────────────────────── */
+        .timer-wrap {
+            display: flex; align-items: center; gap: 16px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 20px; padding: 14px 18px;
+            margin-bottom: 18px; position: relative; overflow: hidden;
+        }
+        .timer-wrap::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, rgba(0,229,255,0.03), transparent);
+            pointer-events: none;
+        }
+
+        /* SVG ring countdown */
+        .timer-ring-wrap {
+            position: relative; width: 64px; height: 64px; flex-shrink: 0;
+        }
+        .timer-ring-wrap svg { transform: rotate(-90deg); }
+        .ring-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 4; }
+        .ring-progress {
+            fill: none; stroke: #00e5ff; stroke-width: 4;
+            stroke-linecap: round;
+            stroke-dasharray: 163; /* 2π×26 ≈ 163 */
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 1s linear, stroke 0.5s;
+            filter: drop-shadow(0 0 4px rgba(0,229,255,0.8));
+        }
+        .ring-progress.urgent { stroke: #ff5555; filter: drop-shadow(0 0 6px rgba(255,85,85,0.9)); }
+        .timer-center-text {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .timer-icon-sm { font-size: 13px; color: #00e5ff; margin-bottom: 1px; line-height: 1; }
+        .timer-icon-sm.urgent { color: #ff5555; }
+
+        /* Digital digits */
+        .timer-right { flex: 1; }
+        .timer-digits {
+            font-family: 'Share Tech Mono', monospace; font-size: 36px;
+            color: #00e5ff; line-height: 1; letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(0,229,255,0.7), 0 0 40px rgba(0,229,255,0.3);
+            transition: color 0.4s, text-shadow 0.4s;
+        }
+        .timer-digits.urgent {
+            color: #ff5555;
+            text-shadow: 0 0 20px rgba(255,85,85,0.9), 0 0 40px rgba(255,85,85,0.4);
+            animation: countPulse 0.8s ease infinite;
+        }
+        .timer-sublabel {
+            font-size: 11px; font-weight: 800; letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.3); text-transform: uppercase; margin-top: 3px;
+        }
+
+        /* Timer segments (colon blink) */
+        .t-sep { animation: beep 1s step-start infinite; display: inline-block; }
+
+        /* Progress bar bawah card */
+        .timer-bar-bg {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+            background: rgba(255,255,255,0.05);
+        }
+        .timer-bar-fill {
+            height: 100%; width: 100%;
+            background: linear-gradient(90deg, #00e5ff, #00ff88);
+            transition: width 1s linear, background 0.5s;
+            border-radius: 0 2px 2px 0;
+        }
+        .timer-bar-fill.urgent { background: linear-gradient(90deg, #ff5555, #ff9900); }
+
+        /* Expired state */
+        .timer-wrap.expired .timer-digits { color: #ff3333; text-shadow: 0 0 20px rgba(255,51,51,0.9); }
+        .timer-wrap.expired { border-color: rgba(255,51,51,0.3); background: rgba(255,0,0,0.06); }
+        .timer-wrap.expired .timer-bar-fill { background: #ff3333; }
+
+        /* ── AUTO CHECK BADGE ───────────────────────────────────── */
+        .auto-badge {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(0,255,136,0.05);
+            border: 1px solid rgba(0,255,136,0.15);
+            border-radius: 12px; padding: 10px 14px;
+            margin-bottom: 20px;
+        }
+        .pulse-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #00ff88; flex-shrink: 0; position: relative;
+        }
+        .pulse-dot::before, .pulse-dot::after {
+            content: ''; position: absolute; inset: 0; border-radius: 50%;
+            background: #00ff88; animation: ripple 2s ease-out infinite;
+        }
+        .pulse-dot::after { animation-delay: 0.6s; }
+        .auto-badge-text { font-size: 12px; font-weight: 800; color: rgba(0,255,136,0.75); }
+        .auto-badge-count {
+            margin-left: auto; font-family: 'Share Tech Mono', monospace;
+            font-size: 11px; color: rgba(0,255,136,0.4); letter-spacing: 1px;
+        }
+
+        /* ── QR FRAME ───────────────────────────────────────────── */
+        .qr-outer {
+            position: relative; margin-bottom: 18px;
+            background: linear-gradient(135deg, rgba(0,229,255,0.08), rgba(0,255,136,0.05), rgba(191,0,255,0.06));
+            border-radius: 22px; padding: 2px;
+        }
+        .qr-outer::before {
+            content: ''; position: absolute; inset: -1px; border-radius: 23px;
+            background: linear-gradient(135deg, rgba(0,229,255,0.5), rgba(0,255,136,0.3), rgba(191,0,255,0.4));
+            z-index: 0; opacity: 0.5;
+        }
+        .qr-frame {
+            position: relative; z-index: 1;
+            background: rgba(6,7,15,0.95);
+            border-radius: 21px; padding: 20px 20px 14px;
+            display: flex; flex-direction: column; align-items: center;
+            overflow: hidden;
+        }
+
+        /* Corner brackets */
+        .qr-corners {
+            position: absolute; inset: 10px; pointer-events: none; z-index: 3;
+        }
+        .qr-corner {
+            position: absolute; width: 22px; height: 22px;
+            border-color: #00e5ff; border-style: solid;
+            animation: cornerBlink 2s ease-in-out infinite;
+        }
+        .qr-corner.tl { top:0;left:0; border-width:3px 0 0 3px; border-radius:4px 0 0 0; }
+        .qr-corner.tr { top:0;right:0; border-width:3px 3px 0 0; border-radius:0 4px 0 0; animation-delay:.3s }
+        .qr-corner.bl { bottom:0;left:0; border-width:0 0 3px 3px; border-radius:0 0 0 4px; animation-delay:.6s }
+        .qr-corner.br { bottom:0;right:0; border-width:0 3px 3px 0; border-radius:0 0 4px 0; animation-delay:.9s }
+
+        /* Scan line */
+        .scan-line {
+            position: absolute; left: 14px; right: 14px; height: 2px; z-index: 2;
+            background: linear-gradient(90deg, transparent, rgba(0,229,255,0.9), rgba(0,255,136,0.6), rgba(0,229,255,0.9), transparent);
+            box-shadow: 0 0 12px rgba(0,229,255,0.8), 0 0 24px rgba(0,229,255,0.4);
+            animation: scanLine 2.5s ease-in-out infinite alternate;
+            border-radius: 2px;
+        }
+
+        .qr-label {
+            font-size: 10px; font-weight: 800; letter-spacing: 2px;
+            color: rgba(0,229,255,0.4); text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        /* QR canvas wrapper */
+        .qr-canvas-wrap {
+            background: #fff; border-radius: 14px; padding: 12px;
+            box-shadow: 0 0 0 1px rgba(0,229,255,0.2), 0 0 40px rgba(0,229,255,0.2);
+            position: relative; z-index: 1;
+        }
+        #qrcode canvas { display: block; width: 180px !important; height: 180px !important; border-radius: 6px; }
+
+        /* QRIS badge bawah */
+        .qr-brand {
+            display: flex; align-items: center; gap: 8px;
+            margin-top: 14px; padding: 8px 18px;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 30px;
+        }
+        .qr-brand-icon { font-size: 16px; }
+        .qr-brand-text { font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.35); letter-spacing: 1px; }
+        .qr-brand-badge {
+            font-size: 10px; font-weight: 900; color: #00ff88;
+            background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.25);
+            border-radius: 20px; padding: 2px 8px; letter-spacing: 0.5px;
+        }
+
+        /* ── DOWNLOAD BTN ───────────────────────────────────────── */
+        .btn-download {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            margin: 0 auto 22px;
+            background: transparent;
+            border: 1.5px solid rgba(0,255,136,0.35);
+            color: rgba(0,255,136,0.7); padding: 9px 28px; border-radius: 40px;
+            font-weight: 800; font-size: 12px; cursor: pointer; transition: 0.25s;
+            font-family: 'Nunito', sans-serif; letter-spacing: 0.5px;
+        }
+        .btn-download:hover {
+            background: rgba(0,255,136,0.08);
+            border-color: #00ff88; color: #00ff88;
+            box-shadow: 0 0 20px rgba(0,255,136,0.25), inset 0 0 10px rgba(0,255,136,0.05);
+            transform: translateY(-1px);
+        }
+
+        /* ── ACTION BUTTONS ─────────────────────────────────────── */
+        .btn-group { display: flex; gap: 12px; }
+
+        .btn {
+            flex: 1; padding: 14px 0;
+            border-radius: 16px; /* Lebih kotak dari sebelumnya */
+            font-weight: 900; font-size: 14px; cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.22,1,0.36,1);
+            border: 1.5px solid; background: transparent;
+            display: flex; align-items: center; justify-content: center; gap: 9px;
+            font-family: 'Nunito', sans-serif; letter-spacing: 0.3px;
+            position: relative; overflow: hidden;
+        }
+        .btn::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        /* Cek Status */
+        .btn-check {
+            border-color: rgba(0,229,255,0.5);
+            color: #00e5ff;
+            background: rgba(0,229,255,0.06);
+            box-shadow: inset 0 0 20px rgba(0,229,255,0.04);
+        }
+        .btn-check:hover {
+            background: rgba(0,229,255,0.14);
+            border-color: #00e5ff;
+            box-shadow: 0 0 28px rgba(0,229,255,0.3), inset 0 0 20px rgba(0,229,255,0.08);
+            transform: translateY(-2px);
+        }
+        .btn-check:active { transform: scale(0.97); }
+
+        /* Spinning icon on check */
+        .btn-check.loading .fa-sync-alt { animation: spin 0.7s linear infinite; }
+
+        /* Batalkan */
+        .btn-cancel {
+            border-color: rgba(255,60,60,0.4);
+            color: rgba(255,100,100,0.8);
+            background: rgba(255,60,60,0.05);
+        }
+        .btn-cancel:hover {
+            background: rgba(255,60,60,0.12);
+            border-color: #ff5555;
+            color: #ff5555;
+            box-shadow: 0 0 24px rgba(255,85,85,0.25), inset 0 0 16px rgba(255,60,60,0.06);
+            transform: translateY(-2px);
+        }
+        .btn-cancel:active { transform: scale(0.97); }
+        .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+        /* ── LOADING OVERLAY ────────────────────────────────────── */
+        .loading-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.82); backdrop-filter: blur(10px);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 9999; visibility: hidden; opacity: 0; transition: 0.3s;
+        }
+        .loading-overlay.active { visibility: visible; opacity: 1; }
+        .loader-rings { position: relative; width: 72px; height: 72px; margin-bottom: 22px; }
+        .ring { position: absolute; border-radius: 50%; border: 3px solid transparent; }
+        .ring-outer { width: 100%; height: 100%; border-top-color: #00e5ff; border-bottom-color: rgba(0,229,255,0.2); animation: spin 1.2s linear infinite; }
+        .ring-inner { width: 48px; height: 48px; top: 12px; left: 12px; border-left-color: #bf00ff; border-right-color: rgba(191,0,255,0.2); animation: spinR 1s linear infinite; }
+        .loading-text { color: #00e5ff; font-size: 13px; font-weight: 800; letter-spacing: 3px; text-shadow: 0 0 12px #00e5ff; }
+
+        /* ── MODALS ─────────────────────────────────────────────── */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.82); backdrop-filter: blur(10px);
+            display: flex; justify-content: center; align-items: flex-end;
+            padding-bottom: 24px;
+            z-index: 9998; visibility: hidden; opacity: 0; transition: 0.3s;
+        }
+        .modal-overlay.show { visibility: visible; opacity: 1; }
+        .modal-card {
+            background: linear-gradient(170deg, rgba(12,14,26,0.99), rgba(8,10,20,0.99));
+            border-radius: 26px 26px 20px 20px; padding: 30px 24px 28px;
+            width: min(420px, calc(100% - 32px)); text-align: center;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 -10px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(0,229,255,0.08);
+            transform: translateY(40px); transition: 0.4s cubic-bezier(0.22,1,0.36,1);
+            position: relative; overflow: hidden;
+        }
+        .modal-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0,229,255,0.5), transparent);
+        }
+        .modal-overlay.show .modal-card { transform: translateY(0); }
+        .modal-icon { font-size: 54px; margin-bottom: 14px; line-height: 1; }
+        .modal-title { font-size: 20px; font-weight: 900; margin-bottom: 8px; }
+        .modal-message { color: rgba(255,255,255,0.45); font-size: 13px; font-weight: 600; margin-bottom: 24px; line-height: 1.7; }
+
+        .modal-actions { display: flex; gap: 10px; }
+        .modal-btn {
+            flex: 1; padding: 13px 0; border-radius: 14px;
+            font-weight: 900; font-size: 14px; border: 1.5px solid;
+            background: transparent; cursor: pointer; transition: 0.22s;
+            font-family: 'Nunito', sans-serif;
+        }
+        .modal-btn:hover { transform: translateY(-1px); filter: brightness(1.15); }
+        .modal-btn.solid-red {
+            background: rgba(255,60,60,0.15); border-color: #ff5555; color: #ff5555;
+        }
+        .modal-btn.solid-green {
+            background: rgba(0,255,136,0.1); border-color: #00ff88; color: #00ff88;
+        }
+        .modal-btn.solid-orange {
+            background: rgba(255,170,0,0.1); border-color: #ffaa00; color: #ffaa00;
+        }
+
+        /* ── SUCCESS / FAIL TOAST ───────────────────────────────── */
+        .result-toast {
+            position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: rgba(8,10,22,0.97);
+            border: 1px solid rgba(0,255,136,0.4);
+            border-radius: 18px; padding: 16px 24px;
+            display: flex; align-items: center; gap: 14px;
+            min-width: 280px; max-width: 380px;
+            box-shadow: 0 0 40px rgba(0,255,136,0.2), 0 20px 50px rgba(0,0,0,0.7);
+            z-index: 10000; opacity: 0; visibility: hidden; transition: 0.4s cubic-bezier(0.22,1,0.36,1);
+        }
+        .result-toast.show {
+            opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0);
+        }
+        .result-toast.fail { border-color: rgba(255,85,85,0.4); box-shadow: 0 0 40px rgba(255,85,85,0.2), 0 20px 50px rgba(0,0,0,0.7); }
+        .toast-icon { font-size: 28px; flex-shrink: 0; }
+        .toast-title { font-weight: 900; font-size: 15px; color: #fff; margin-bottom: 2px; }
+        .toast-sub { font-size: 12px; color: rgba(255,255,255,0.45); font-weight: 700; }
+    </style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+<nav class="navbar">
+    <div class="nav-left"></div>
+    <div class="nav-right">
+        <a href="/isisaldo" class="coins-wrapper">🪙 <span id="coinCount">0</span> +</a>
+        <div class="user-avatar">
+            <img src="/image/profile.jpg" alt="User" onerror="this.src='https://ui-avatars.com/api/?name=DzzXNzz&background=06070f&color=00e5ff&bold=true'">
+        </div>
+    </div>
+</nav>
+
+<main class="main-content">
+    <div class="payment-card">
+        <div class="card-shimmer"></div>
+        <div class="card-bg-orb c1"></div>
+        <div class="card-bg-orb c2"></div>
+
+        <div class="card-inner">
+
+            <!-- Header -->
+            <div class="pay-header">
+                <div class="pay-label">🔒 Pembayaran QRIS</div>
+                <div class="pay-amount" id="payAmount">Rp -</div>
+                <div class="pay-order">
+                    <i class="fas fa-hashtag" style="font-size:9px;opacity:0.5"></i>
+                    <span id="payOrder">ORDER-ID</span>
+                </div>
+            </div>
+
+            <div class="section-div"></div>
+
+            <!-- ── COUNTDOWN TIMER ── -->
+            <div class="timer-wrap" id="timerWrap">
+                <!-- SVG Ring -->
+                <div class="timer-ring-wrap">
+                    <svg width="64" height="64" viewBox="0 0 64 64">
+                        <circle class="ring-bg" cx="32" cy="32" r="26"/>
+                        <circle class="ring-progress" id="ringProgress" cx="32" cy="32" r="26"/>
+                    </svg>
+                    <div class="timer-center-text">
+                        <i class="fas fa-hourglass-half timer-icon-sm" id="timerIcon"></i>
+                    </div>
+                </div>
+
+                <!-- Digits -->
+                <div class="timer-right">
+                    <div class="timer-digits" id="timerDigits">
+                        <span id="tMin">05</span><span class="t-sep">:</span><span id="tSec">00</span>
+                    </div>
+                    <div class="timer-sublabel" id="timerLabel">Waktu tersisa</div>
+                </div>
+
+                <!-- Bottom bar -->
+                <div class="timer-bar-bg">
+                    <div class="timer-bar-fill" id="timerBarFill"></div>
+                </div>
+            </div>
+
+            <!-- Auto check badge -->
+            <div class="auto-badge">
+                <div class="pulse-dot"></div>
+                <div class="auto-badge-text">Otomatis cek pembayaran tiap 5 detik</div>
+                <div class="auto-badge-count" id="nextCheckCount">5s</div>
+            </div>
+
+            <!-- ── QR FRAME ── -->
+            <div class="qr-outer">
+                <div class="qr-frame">
+                    <div class="qr-corners">
+                        <div class="qr-corner tl"></div>
+                        <div class="qr-corner tr"></div>
+                        <div class="qr-corner bl"></div>
+                        <div class="qr-corner br"></div>
+                    </div>
+                    <div class="scan-line" id="scanLine"></div>
+
+                    <div class="qr-label">SCAN QR CODE — BAYAR SEKARANG</div>
+                    <div class="qr-canvas-wrap">
+                        <div id="qrcode"></div>
+                    </div>
+
+                    <div class="qr-brand">
+                        <span class="qr-brand-icon">📱</span>
+                        <span class="qr-brand-text">QRIS · SEMUA E-WALLET</span>
+                        <span class="qr-brand-badge">AKTIF</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download -->
+            <button class="btn-download" id="downloadBtn">
+                <i class="fas fa-download"></i> Simpan QR Code
+            </button>
+
+            <!-- Action buttons -->
+            <div class="btn-group">
+                <button class="btn btn-check" id="cekStatusBtn">
+                    <i class="fas fa-sync-alt"></i> Cek Status
+                </button>
+                <button class="btn btn-cancel" id="batalkanBtn">
+                    <i class="fas fa-times-circle"></i> Batalkan
+                </button>
+            </div>
+
+        </div>
+    </div>
+</main>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loader-rings">
+        <div class="ring ring-outer"></div>
+        <div class="ring ring-inner"></div>
+    </div>
+    <div class="loading-text" id="loadingText">MEMPROSES...</div>
+</div>
+
+<!-- Modal: Belum Dibayar -->
+<div class="modal-overlay" id="pendingModal">
+    <div class="modal-card">
+        <div class="modal-icon">⏳</div>
+        <h3 class="modal-title" style="color:#ffaa00">Belum Dibayar</h3>
+        <p class="modal-message">Pembayaran belum diterima. Silakan scan QR dan selesaikan transaksi sebelum waktu habis.</p>
+        <div class="modal-actions">
+            <button class="modal-btn solid-orange" id="pendingOk">Oke, Lanjut Bayar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Konfirmasi Batalkan -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal-card">
+        <div class="modal-icon">⚠️</div>
+        <h3 class="modal-title" style="color:#ff5555">Batalkan Transaksi?</h3>
+        <p class="modal-message">Transaksi akan dibatalkan permanen.<br>Pastikan kamu belum melakukan pembayaran.</p>
+        <div class="modal-actions">
+            <button class="modal-btn solid-red" id="confirmYa">Ya, Batalkan</button>
+            <button class="modal-btn solid-green" id="confirmTidak">Tidak</button>
+        </div>
+    </div>
+</div>
+
+<!-- Result Toast -->
+<div class="result-toast" id="resultToast">
+    <div class="toast-icon" id="toastIcon">✅</div>
+    <div>
+        <div class="toast-title" id="toastTitle">Berhasil!</div>
+        <div class="toast-sub" id="toastSub">-</div>
+    </div>
+</div>
+
+<script src="/script.js"></script>
+<script>
+/* ── TIMER ──────────────────────────────────────────────────── */
+const TOTAL_SEC = 5 * 60;
+let timerLeft = TOTAL_SEC;
+let timerInterval = null;
+let pollInterval  = null;
+let nextPollIn    = 5;
+let isDone        = false;
+
+const ringEl     = document.getElementById('ringProgress');
+const digitsEl   = document.getElementById('timerDigits');
+const minEl      = document.getElementById('tMin');
+const secEl      = document.getElementById('tSec');
+const timerWrap  = document.getElementById('timerWrap');
+const timerLabel = document.getElementById('timerLabel');
+const timerIcon  = document.getElementById('timerIcon');
+const barFill    = document.getElementById('timerBarFill');
+const nextCountEl= document.getElementById('nextCheckCount');
+const CIRC       = 2 * Math.PI * 26; // ≈ 163.4
+
+function renderTimer() {
+    const m = Math.floor(timerLeft / 60);
+    const s = timerLeft % 60;
+    minEl.textContent = m.toString().padStart(2,'0');
+    secEl.textContent = s.toString().padStart(2,'0');
+
+    // Ring progress
+    const pct = timerLeft / TOTAL_SEC;
+    ringEl.style.strokeDashoffset = CIRC * (1 - pct);
+
+    // Bar
+    barFill.style.width = (pct * 100) + '%';
+
+    const isUrgent = timerLeft <= 60;
+    digitsEl.classList.toggle('urgent', isUrgent);
+    ringEl.classList.toggle('urgent', isUrgent);
+    barFill.classList.toggle('urgent', isUrgent);
+    timerIcon.classList.toggle('urgent', isUrgent);
+
+    if (isUrgent) {
+        timerLabel.textContent = '⚡ Segera bayar!';
+        ringEl.style.stroke = '#ff5555';
+        timerIcon.style.color = '#ff5555';
+    }
+
+    if (timerLeft <= 0) {
+        clearInterval(timerInterval);
+        timerWrap.classList.add('expired');
+        timerLabel.textContent = 'Waktu habis!';
+        minEl.textContent = '00';
+        secEl.textContent = '00';
+        barFill.style.width = '0%';
+        document.getElementById('scanLine').style.animationPlayState = 'paused';
+        document.getElementById('scanLine').style.opacity = '0.2';
+        showToast('❌', 'Waktu Habis', 'Transaksi expired. Buat transaksi baru.', true);
+        isDone = true;
+        stopPoll();
+    }
+}
+
+function startTimer() {
+    renderTimer();
+    timerInterval = setInterval(() => {
+        timerLeft--;
+        renderTimer();
+    }, 1000);
+}
+
+/* ── NEXT POLL COUNTER ──────────────────────────────────────── */
+function startPollCountdown() {
+    clearInterval(pollInterval);
+    nextPollIn = 5;
+    nextCountEl.textContent = nextPollIn + 's';
+    pollInterval = setInterval(async () => {
+        nextPollIn--;
+        nextCountEl.textContent = nextPollIn + 's';
+        if (nextPollIn <= 0) {
+            nextPollIn = 5;
+            await doCekStatus(true); // silent
+            nextCountEl.textContent = nextPollIn + 's';
+        }
+    }, 1000);
+}
+function stopPoll() { clearInterval(pollInterval); }
+
+/* ── CEK STATUS ─────────────────────────────────────────────── */
+async function doCekStatus(silent = false) {
+    if (isDone) return;
+    const ORDER_ID = document.getElementById('payOrder').textContent;
+    if (!silent) {
+        document.getElementById('cekStatusBtn').classList.add('loading');
+        document.getElementById('cekStatusBtn').disabled = true;
+    }
+    try {
+        const res  = await fetch(`/api/transaction/${ORDER_ID}/status`);
+        const data = await res.json();
+
+        if (data.status === 'paid' || data.status === 'success') {
+            isDone = true;
+            stopPoll();
+            clearInterval(timerInterval);
+            showToast('🎉', 'Pembayaran Berhasil!', `+${Number(data.amount||0).toLocaleString('id-ID')} coins masuk ke akun kamu`, false);
+            setTimeout(() => { window.location.href = '/isisaldo'; }, 3000);
+        } else if (!silent) {
+            showModal('pendingModal');
+        }
+    } catch(e) {
+        if (!silent) showToast('⚠️', 'Gagal cek', 'Coba lagi beberapa saat', true);
+    } finally {
+        if (!silent) {
+            setTimeout(() => {
+                document.getElementById('cekStatusBtn').classList.remove('loading');
+                document.getElementById('cekStatusBtn').disabled = false;
+            }, 600);
+        }
+    }
+}
+
+/* ── MODALS ─────────────────────────────────────────────────── */
+function showModal(id) {
+    document.getElementById(id).classList.add('show');
+}
+function hideModal(id) {
+    document.getElementById(id).classList.remove('show');
+}
+document.getElementById('pendingOk').onclick = () => hideModal('pendingModal');
+document.getElementById('confirmTidak').onclick = () => hideModal('confirmModal');
+document.getElementById('confirmYa').onclick = async () => {
+    hideModal('confirmModal');
+    document.getElementById('loadingText').textContent = 'MEMBATALKAN...';
+    document.getElementById('loadingOverlay').classList.add('active');
+    try {
+        const ORDER_ID = document.getElementById('payOrder').textContent;
+        await fetch(`/api/transaction/${ORDER_ID}/cancel`, { method: 'POST' });
+    } catch(e) {}
+    setTimeout(() => { window.location.href = '/isisaldo'; }, 800);
+};
+
+document.getElementById('cekStatusBtn').onclick = () => doCekStatus(false);
+document.getElementById('batalkanBtn').onclick  = () => showModal('confirmModal');
+
+/* ── TOAST ──────────────────────────────────────────────────── */
+function showToast(icon, title, sub, isFail) {
+    const toast = document.getElementById('resultToast');
+    document.getElementById('toastIcon').textContent  = icon;
+    document.getElementById('toastTitle').textContent = title;
+    document.getElementById('toastSub').textContent   = sub;
+    toast.classList.toggle('fail', isFail);
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 4500);
+}
+
+/* ── DOWNLOAD QR ────────────────────────────────────────────── */
+document.getElementById('downloadBtn').onclick = () => {
+    const canvas = document.querySelector('#qrcode canvas');
+    if (!canvas) return;
+    const link = document.createElement('a');
+    link.download = 'qris-dzzxnzz.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+};
+
+/* ── INIT FROM pay.js DATA ──────────────────────────────────── */
+// pay.js harus set: window.PAY_DATA = { order_id, amount, qr_string }
+// Fallback demo jika pay.js belum ada
+window.addEventListener('DOMContentLoaded', () => {
+    const d = window.PAY_DATA || {
+        order_id: 'DZZ-DEMO-123',
+        amount:   50000,
+        qr_string: 'https://dzzxnzz.com/pay/DZZ-DEMO-123',
+        expires_in: 300,
+    };
+
+    document.getElementById('payAmount').textContent  = 'Rp ' + Number(d.amount).toLocaleString('id-ID');
+    document.getElementById('payOrder').textContent   = d.order_id;
+    if (d.expires_in) timerLeft = d.expires_in;
+
+    // Generate QR
+    if (window.QRCode && d.qr_string) {
+        QRCode.toCanvas(document.createElement('canvas'), d.qr_string, {
+            width: 180, margin: 1,
+            color: { dark: '#000000', light: '#ffffff' },
+            errorCorrectionLevel: 'H',
+        }, (err, canvas) => {
+            if (!err) document.getElementById('qrcode').appendChild(canvas);
+        });
+    }
+
+    startTimer();
+    startPollCountdown();
+});
+</script>
+</body>
+</html>
