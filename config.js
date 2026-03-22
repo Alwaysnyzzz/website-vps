@@ -15,7 +15,7 @@ const CONFIG = {
   PAKASIR_STATUS:   'https://app.pakasir.com/api/transactionstatus',
 
   // ── Webhook secret (bebas, samain nanti di Pakasir) ──────
-  WEBHOOK_SECRET:   'ISI_SECRET_BEBAS',
+  WEBHOOK_SECRET:   'rahasia123',
 
   // ── Lainnya (tidak perlu diubah) ─────────────────────────
   PORT:             3000,
