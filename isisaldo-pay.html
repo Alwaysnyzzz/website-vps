@@ -7,156 +7,177 @@
     <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="/style-extra.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Righteous&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Righteous&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <style>
-        @keyframes fadeInUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes shineBar { 0%{background-position:0%} 100%{background-position:200%} }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
-        @keyframes spin { to{transform:rotate(360deg)} }
+        @keyframes fadeInUp  { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes shineBar  { 0%{background-position:0%} 100%{background-position:200%} }
+        @keyframes pulse     { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.95)} }
+        @keyframes spin      { to{transform:rotate(360deg)} }
+        @keyframes spinR     { to{transform:rotate(-360deg)} }
+        @keyframes scanLine  { 0%{top:14px} 100%{top:calc(100% - 14px)} }
+        @keyframes cornerBlink { 0%,100%{opacity:0.4} 50%{opacity:1} }
+        @keyframes ripple    { 0%{transform:scale(1);opacity:0.6} 100%{transform:scale(2.5);opacity:0} }
+        @keyframes countPulse{ 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+        @keyframes successPop{ 0%{transform:scale(0.4);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
 
-        .pay-wrapper {
-            max-width: 480px; margin: 0 auto; animation: fadeInUp 0.6s ease;
-            padding: 0 16px 40px;
-        }
+        .pay-wrapper { max-width: 460px; margin: 0 auto; padding: 0 16px 60px; animation: fadeInUp 0.6s ease; }
 
         .pay-card {
-            background: rgba(13,15,25,0.92);
-            backdrop-filter: blur(20px);
-            border-radius: 24px; padding: 32px 24px;
-            border: 1px solid rgba(0,229,255,0.2);
-            box-shadow: 0 0 40px rgba(0,229,255,0.08), 0 20px 60px rgba(0,0,0,0.5);
+            background: rgba(8,10,22,0.96); backdrop-filter: blur(24px);
+            border-radius: 28px; border: 1px solid rgba(0,229,255,0.18);
+            box-shadow: 0 0 60px rgba(0,229,255,0.08), 0 30px 80px rgba(0,0,0,0.8);
             position: relative; overflow: hidden;
-            text-align: center;
         }
-        .pay-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-            background: linear-gradient(90deg, #00e5ff, #00ff88, #bf00ff, #00e5ff);
-            background-size: 200% 100%; animation: shineBar 3s linear infinite;
+        .card-shimmer {
+            height: 3px;
+            background: linear-gradient(90deg,#00e5ff,#00ff88,#bf00ff,#ff6600,#00e5ff);
+            background-size: 300% 100%; animation: shineBar 4s linear infinite;
+            border-radius: 28px 28px 0 0;
         }
+        .card-inner { padding: 26px 22px 28px; }
+        .card-bg-orb { position:absolute;border-radius:50%;pointer-events:none;filter:blur(60px);opacity:0.06; }
+        .card-bg-orb.c1 { width:280px;height:280px;background:#00e5ff;top:-80px;right:-80px; }
+        .card-bg-orb.c2 { width:200px;height:200px;background:#bf00ff;bottom:-60px;left:-60px; }
 
-        .pay-title {
-            font-family: 'Righteous', cursive; font-size: 20px; color: #fff;
-            margin-bottom: 4px;
-        }
-        .pay-subtitle { font-size: 13px; color: rgba(255,255,255,0.4); font-weight: 700; margin-bottom: 24px; }
-
+        /* Header */
+        .pay-header { text-align:center; margin-bottom:20px; }
+        .pay-label { font-size:11px;font-weight:800;color:rgba(0,229,255,0.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px; }
         .pay-amount {
-            font-family: 'Righteous', cursive; font-size: 36px;
-            background: linear-gradient(135deg, #00e5ff, #00ff88);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 14px rgba(0,229,255,0.4));
-            margin-bottom: 20px;
+            font-family:'Righteous',cursive; font-size:42px;
+            background:linear-gradient(135deg,#fff 0%,#00e5ff 60%,#00ff88 100%);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+            filter:drop-shadow(0 0 20px rgba(0,229,255,0.4));
+            line-height:1; margin-bottom:6px;
+        }
+        .pay-order {
+            display:inline-flex;align-items:center;gap:6px;
+            font-family:'Share Tech Mono',monospace;font-size:11px;
+            color:rgba(255,255,255,0.25);background:rgba(255,255,255,0.04);
+            border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:4px 12px;
         }
 
-        .qr-wrap {
-            background: #fff; border-radius: 20px; padding: 16px;
-            display: inline-block; margin-bottom: 20px;
-            box-shadow: 0 0 40px rgba(0,229,255,0.3);
-        }
-        .qr-wrap img { display: block; width: 220px; height: 220px; border-radius: 8px; }
-        .qr-loading {
-            width: 220px; height: 220px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 40px; color: rgba(0,0,0,0.2);
-        }
-
-        .timer-section { margin-bottom: 20px; }
-        .timer-label { font-size: 12px; color: rgba(255,255,255,0.4); font-weight: 700; margin-bottom: 8px; }
-        .timer-count { font-family: 'Righteous', cursive; font-size: 28px; color: #00e5ff; margin-bottom: 10px; }
-        .timer-count.urgent { color: #ff6666; animation: pulse 1s ease infinite; }
-        .timer-bar-bg { background: rgba(255,255,255,0.08); border-radius: 4px; height: 4px; overflow: hidden; }
-        .timer-bar-fill {
-            height: 100%; background: linear-gradient(90deg, #00e5ff, #00ff88);
-            border-radius: 4px; transition: width 1s linear; width: 100%;
-        }
-
-        .order-info {
-            display: flex; justify-content: space-between;
-            background: rgba(0,0,0,0.25); border-radius: 12px;
-            padding: 12px 16px; margin-bottom: 20px; text-align: left;
-        }
-        .order-info div { font-size: 12px; }
-        .order-info .lbl { color: rgba(255,255,255,0.35); font-weight: 700; margin-bottom: 3px; }
-        .order-info .val { color: #fff; font-weight: 900; font-size: 13px; }
-
+        /* Status badge */
         .status-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 8px 18px; border-radius: 30px; font-size: 13px; font-weight: 800;
-            margin-bottom: 20px;
+            display:inline-flex;align-items:center;gap:8px;
+            padding:8px 18px;border-radius:30px;font-size:13px;font-weight:800;
+            margin-bottom:18px;
         }
-        .status-badge.waiting {
-            background: rgba(255,224,0,0.08); border: 1px solid rgba(255,224,0,0.3);
-            color: #ffe000;
-        }
-        .status-badge.success {
-            background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.35);
-            color: #00ff88;
-        }
-        .status-badge.failed, .status-badge.expired {
-            background: rgba(255,0,0,0.08); border: 1px solid rgba(255,0,0,0.2);
-            color: #ff6666;
-        }
-        .status-dot {
-            width: 8px; height: 8px; border-radius: 50%; background: currentColor;
-            animation: pulse 1.5s ease infinite;
-        }
-        .status-badge.success .status-dot,
-        .status-badge.failed .status-dot { animation: none; }
+        .status-badge.waiting { background:rgba(255,224,0,0.08);border:1px solid rgba(255,224,0,0.3);color:#ffe000; }
+        .status-badge.success { background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.35);color:#00ff88; }
+        .status-badge.failed,.status-badge.expired { background:rgba(255,0,0,0.08);border:1px solid rgba(255,0,0,0.2);color:#ff6666; }
+        .status-dot { width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 1.5s ease infinite; }
+        .status-badge.success .status-dot,.status-badge.failed .status-dot,.status-badge.expired .status-dot { animation:none; }
 
-        .hint-text {
-            font-size: 12px; color: rgba(255,255,255,0.3); font-weight: 700;
-            line-height: 1.6; margin-bottom: 20px;
-        }
+        /* QR */
+        .qr-outer { position:relative;margin-bottom:16px;background:linear-gradient(135deg,rgba(0,229,255,0.08),rgba(0,255,136,0.05),rgba(191,0,255,0.06));border-radius:22px;padding:2px; }
+        .qr-outer::before { content:'';position:absolute;inset:-1px;border-radius:23px;background:linear-gradient(135deg,rgba(0,229,255,0.5),rgba(0,255,136,0.3),rgba(191,0,255,0.4));z-index:0;opacity:0.5; }
+        .qr-frame { position:relative;z-index:1;background:rgba(6,7,15,0.95);border-radius:21px;padding:18px 18px 14px;display:flex;flex-direction:column;align-items:center;overflow:hidden; }
+        .qr-corners { position:absolute;inset:10px;pointer-events:none;z-index:3; }
+        .qr-corner { position:absolute;width:22px;height:22px;border-color:#00e5ff;border-style:solid;animation:cornerBlink 2s ease-in-out infinite; }
+        .qr-corner.tl { top:0;left:0;border-width:3px 0 0 3px;border-radius:4px 0 0 0; }
+        .qr-corner.tr { top:0;right:0;border-width:3px 3px 0 0;border-radius:0 4px 0 0;animation-delay:.3s }
+        .qr-corner.bl { bottom:0;left:0;border-width:0 0 3px 3px;border-radius:0 0 0 4px;animation-delay:.6s }
+        .qr-corner.br { bottom:0;right:0;border-width:0 3px 3px 0;border-radius:0 0 4px 0;animation-delay:.9s }
+        .scan-line { position:absolute;left:14px;right:14px;height:2px;z-index:2;background:linear-gradient(90deg,transparent,rgba(0,229,255,0.9),rgba(0,255,136,0.6),rgba(0,229,255,0.9),transparent);box-shadow:0 0 12px rgba(0,229,255,0.8);animation:scanLine 2.5s ease-in-out infinite alternate;border-radius:2px; }
+        .qr-label { font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(0,229,255,0.4);text-transform:uppercase;margin-bottom:12px; }
+        .qr-canvas-wrap { background:#fff;border-radius:14px;padding:12px;box-shadow:0 0 0 1px rgba(0,229,255,0.2),0 0 40px rgba(0,229,255,0.2);position:relative;z-index:1; }
+        #qrcode canvas { display:block;width:190px !important;height:190px !important;border-radius:6px; }
+        .qr-brand { display:flex;align-items:center;gap:8px;margin-top:12px;padding:7px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:30px; }
+        .qr-brand-text { font-size:11px;font-weight:800;color:rgba(255,255,255,0.35);letter-spacing:1px; }
+        .qr-brand-badge { font-size:10px;font-weight:900;color:#00ff88;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.25);border-radius:20px;padding:2px 8px; }
 
-        .pay-btn {
-            width: 100%; padding: 15px;
-            background: linear-gradient(135deg, #00e5ff, #00ff88);
-            border: none; border-radius: 14px; color: #06070f;
-            font-weight: 900; font-size: 15px; cursor: pointer;
-            font-family: 'Nunito', sans-serif;
-            box-shadow: 0 6px 24px rgba(0,229,255,0.35);
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: 0.25s; text-decoration: none;
+        /* Timer */
+        .timer-wrap {
+            display:flex;align-items:center;gap:14px;
+            background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.07);
+            border-radius:18px;padding:12px 16px;margin-bottom:16px;position:relative;overflow:hidden;
         }
-        .pay-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(0,229,255,0.5); }
+        .timer-ring-wrap { position:relative;width:60px;height:60px;flex-shrink:0; }
+        .timer-ring-wrap svg { transform:rotate(-90deg); }
+        .ring-bg { fill:none;stroke:rgba(255,255,255,0.06);stroke-width:4; }
+        .ring-progress { fill:none;stroke:#00e5ff;stroke-width:4;stroke-linecap:round;stroke-dasharray:163;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear,stroke 0.5s;filter:drop-shadow(0 0 4px rgba(0,229,255,0.8)); }
+        .ring-progress.urgent { stroke:#ff5555;filter:drop-shadow(0 0 6px rgba(255,85,85,0.9)); }
+        .timer-center { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#00e5ff; }
+        .timer-center.urgent { color:#ff5555; }
+        .timer-digits { font-family:'Share Tech Mono',monospace;font-size:32px;color:#00e5ff;line-height:1;letter-spacing:3px;text-shadow:0 0 20px rgba(0,229,255,0.7);transition:color 0.4s,text-shadow 0.4s; }
+        .timer-digits.urgent { color:#ff5555;text-shadow:0 0 20px rgba(255,85,85,0.9);animation:countPulse 0.8s ease infinite; }
+        .timer-sub { font-size:11px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,0.3);text-transform:uppercase;margin-top:2px; }
+        .t-sep { animation:pulse 1s step-start infinite;display:inline-block; }
+        .timer-bar-bg { position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,0.05); }
+        .timer-bar-fill { height:100%;width:100%;background:linear-gradient(90deg,#00e5ff,#00ff88);transition:width 1s linear,background 0.5s; }
+        .timer-bar-fill.urgent { background:linear-gradient(90deg,#ff5555,#ff9900); }
 
-        .back-link {
-            display: block; text-align: center; margin-top: 14px;
-            color: rgba(255,255,255,0.3); font-size: 13px; font-weight: 700;
-            text-decoration: none; transition: 0.2s;
+        /* Auto check */
+        .auto-badge { display:flex;align-items:center;gap:10px;background:rgba(0,255,136,0.05);border:1px solid rgba(0,255,136,0.15);border-radius:12px;padding:9px 14px;margin-bottom:18px; }
+        .pulse-dot { width:8px;height:8px;border-radius:50%;background:#00ff88;flex-shrink:0;position:relative; }
+        .pulse-dot::before,.pulse-dot::after { content:'';position:absolute;inset:0;border-radius:50%;background:#00ff88;animation:ripple 2s ease-out infinite; }
+        .pulse-dot::after { animation-delay:.6s; }
+        .auto-badge-text { font-size:12px;font-weight:800;color:rgba(0,255,136,0.75); }
+        .auto-badge-count { margin-left:auto;font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(0,255,136,0.4); }
+
+        /* Order info */
+        .order-info { display:flex;justify-content:space-between;background:rgba(0,0,0,0.25);border-radius:12px;padding:11px 16px;margin-bottom:18px;text-align:left; }
+        .order-info .lbl { font-size:11px;color:rgba(255,255,255,0.35);font-weight:700;margin-bottom:3px; }
+        .order-info .val { color:#fff;font-weight:900;font-size:13px;font-family:'Share Tech Mono',monospace; }
+
+        /* Buttons */
+        .btn-download {
+            display:flex;align-items:center;justify-content:center;gap:8px;
+            margin:0 auto 14px;background:transparent;
+            border:1.5px solid rgba(0,255,136,0.35);color:rgba(0,255,136,0.7);
+            padding:10px 28px;border-radius:40px;font-weight:800;font-size:12px;
+            cursor:pointer;transition:0.25s;font-family:'Nunito',sans-serif;width:100%;
         }
-        .back-link:hover { color: #00e5ff; }
+        .btn-download:hover { background:rgba(0,255,136,0.08);border-color:#00ff88;color:#00ff88;box-shadow:0 0 20px rgba(0,255,136,0.25); }
+
+        .btn-group { display:flex;gap:10px; }
+        .btn {
+            flex:1;padding:13px 0;border-radius:14px;font-weight:900;font-size:14px;
+            cursor:pointer;transition:all 0.25s;border:1.5px solid;background:transparent;
+            display:flex;align-items:center;justify-content:center;gap:8px;
+            font-family:'Nunito',sans-serif;position:relative;overflow:hidden;
+        }
+        .btn-check { border-color:rgba(0,229,255,0.5);color:#00e5ff;background:rgba(0,229,255,0.06); }
+        .btn-check:hover { background:rgba(0,229,255,0.14);border-color:#00e5ff;box-shadow:0 0 28px rgba(0,229,255,0.3);transform:translateY(-2px); }
+        .btn-check.loading .fa-sync-alt { animation:spin 0.7s linear infinite; }
+        .btn-cancel { border-color:rgba(255,60,60,0.4);color:rgba(255,100,100,0.8);background:rgba(255,60,60,0.05); }
+        .btn-cancel:hover { background:rgba(255,60,60,0.12);border-color:#ff5555;color:#ff5555;box-shadow:0 0 24px rgba(255,85,85,0.25);transform:translateY(-2px); }
+        .btn:disabled { opacity:0.35;cursor:not-allowed;transform:none !important;box-shadow:none !important; }
+
+        /* Loading */
+        .loading-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.82);backdrop-filter:blur(10px);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:9999;visibility:hidden;opacity:0;transition:0.3s; }
+        .loading-overlay.active { visibility:visible;opacity:1; }
+        .loader-rings { position:relative;width:72px;height:72px;margin-bottom:22px; }
+        .ring { position:absolute;border-radius:50%;border:3px solid transparent; }
+        .ring-outer { width:100%;height:100%;border-top-color:#00e5ff;border-bottom-color:rgba(0,229,255,0.2);animation:spin 1.2s linear infinite; }
+        .ring-inner { width:48px;height:48px;top:12px;left:12px;border-left-color:#bf00ff;border-right-color:rgba(191,0,255,0.2);animation:spinR 1s linear infinite; }
+        .loading-text { color:#00e5ff;font-size:13px;font-weight:800;letter-spacing:3px;text-shadow:0 0 12px #00e5ff; }
+
+        /* Modals */
+        .modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.82);backdrop-filter:blur(10px);display:flex;justify-content:center;align-items:flex-end;padding-bottom:24px;z-index:9998;visibility:hidden;opacity:0;transition:0.3s; }
+        .modal-overlay.show { visibility:visible;opacity:1; }
+        .modal-card { background:linear-gradient(170deg,rgba(12,14,26,0.99),rgba(8,10,20,0.99));border-radius:26px 26px 20px 20px;padding:28px 22px 26px;width:min(420px,calc(100% - 32px));text-align:center;border:1px solid rgba(255,255,255,0.08);box-shadow:0 -10px 60px rgba(0,0,0,0.8);transform:translateY(40px);transition:0.4s cubic-bezier(0.22,1,0.36,1);position:relative;overflow:hidden; }
+        .modal-card::before { content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(0,229,255,0.5),transparent); }
+        .modal-overlay.show .modal-card { transform:translateY(0); }
+        .modal-icon { font-size:52px;margin-bottom:12px;line-height:1; }
+        .modal-title { font-size:19px;font-weight:900;margin-bottom:8px; }
+        .modal-message { color:rgba(255,255,255,0.45);font-size:13px;font-weight:600;margin-bottom:22px;line-height:1.7; }
+        .modal-actions { display:flex;gap:10px; }
+        .modal-btn { flex:1;padding:13px 0;border-radius:14px;font-weight:900;font-size:14px;border:1.5px solid;background:transparent;cursor:pointer;transition:0.22s;font-family:'Nunito',sans-serif; }
+        .modal-btn:hover { transform:translateY(-1px);filter:brightness(1.15); }
+        .mbtn-red { background:rgba(255,60,60,0.15);border-color:#ff5555;color:#ff5555; }
+        .mbtn-green { background:rgba(0,255,136,0.1);border-color:#00ff88;color:#00ff88; }
+        .mbtn-orange { background:rgba(255,170,0,0.1);border-color:#ffaa00;color:#ffaa00; }
 
         /* Success overlay */
-        .success-overlay {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 9999; opacity: 0; visibility: hidden; transition: 0.4s;
-        }
-        .success-overlay.show { opacity: 1; visibility: visible; }
-        .success-icon {
-            width: 100px; height: 100px; border-radius: 50%;
-            background: rgba(0,255,136,0.12); border: 3px solid #00ff88;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 48px; margin-bottom: 20px;
-            animation: fadeInUp 0.5s ease;
-            box-shadow: 0 0 40px rgba(0,255,136,0.4);
-        }
-        .success-title {
-            font-family: 'Righteous', cursive; font-size: 26px;
-            color: #00ff88; margin-bottom: 8px; animation: fadeInUp 0.5s 0.1s ease both;
-        }
-        .success-sub {
-            font-size: 14px; color: rgba(255,255,255,0.5); font-weight: 700;
-            animation: fadeInUp 0.5s 0.2s ease both; margin-bottom: 28px;
-        }
-        .success-coins {
-            font-family: 'Righteous', cursive; font-size: 40px;
-            background: linear-gradient(135deg, #ffe000, #ff8800);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            animation: fadeInUp 0.5s 0.3s ease both; margin-bottom: 24px;
-        }
+        .success-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.88);backdrop-filter:blur(12px);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;opacity:0;visibility:hidden;transition:0.4s;padding:24px; }
+        .success-overlay.show { opacity:1;visibility:visible; }
+        .success-icon { width:100px;height:100px;border-radius:50%;background:rgba(0,255,136,0.12);border:3px solid #00ff88;display:flex;align-items:center;justify-content:center;font-size:48px;margin-bottom:20px;animation:successPop 0.6s cubic-bezier(0.22,1,0.36,1);box-shadow:0 0 60px rgba(0,255,136,0.4); }
+        .success-title { font-family:'Righteous',cursive;font-size:28px;color:#00ff88;margin-bottom:8px;animation:fadeInUp 0.5s 0.1s ease both; }
+        .success-sub { font-size:14px;color:rgba(255,255,255,0.5);font-weight:700;animation:fadeInUp 0.5s 0.2s ease both;margin-bottom:20px; }
+        .success-coins { font-family:'Righteous',cursive;font-size:44px;background:linear-gradient(135deg,#ffe000,#ff8800);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:fadeInUp 0.5s 0.3s ease both;margin-bottom:28px; }
+        .success-btn { display:flex;align-items:center;gap:10px;padding:14px 32px;background:linear-gradient(135deg,#00e5ff,#00ff88);border:none;border-radius:14px;color:#06070f;font-weight:900;font-size:15px;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 6px 24px rgba(0,229,255,0.35);text-decoration:none;animation:fadeInUp 0.5s 0.4s ease both; }
     </style>
 </head>
 <body>
@@ -187,215 +208,299 @@
 <div class="overlay" id="overlay"></div>
 
 <main class="main-content">
-    <div class="pay-wrapper">
-        <div class="pay-card" id="payCard">
-            <div class="pay-title">📲 Scan & Bayar QRIS</div>
-            <div class="pay-subtitle">Gunakan aplikasi m-banking atau e-wallet favorit kamu</div>
+<div class="pay-wrapper">
+<div class="pay-card">
+    <div class="card-shimmer"></div>
+    <div class="card-bg-orb c1"></div>
+    <div class="card-bg-orb c2"></div>
+    <div class="card-inner">
 
+        <!-- Header -->
+        <div class="pay-header">
+            <div class="pay-label">🔒 Pembayaran QRIS</div>
             <div class="pay-amount" id="payAmount">Rp -</div>
+            <div class="pay-order"><i class="fas fa-hashtag" style="font-size:9px;opacity:0.5"></i><span id="payOrder">-</span></div>
+        </div>
 
-            <!-- Status badge -->
+        <!-- Status -->
+        <div style="text-align:center;margin-bottom:18px">
             <div class="status-badge waiting" id="statusBadge">
                 <div class="status-dot"></div>
                 <span id="statusText">Menunggu Pembayaran</span>
             </div>
-
-            <!-- QR Image -->
-            <div class="qr-wrap" id="qrWrap">
-                <div class="qr-loading">⏳</div>
-            </div>
-
-            <!-- Timer -->
-            <div class="timer-section" id="timerSection">
-                <div class="timer-label">Waktu tersisa</div>
-                <div class="timer-count" id="timerCount">05:00</div>
-                <div class="timer-bar-bg">
-                    <div class="timer-bar-fill" id="timerBar"></div>
-                </div>
-            </div>
-
-            <!-- Order info -->
-            <div class="order-info" id="orderInfo">
-                <div>
-                    <div class="lbl">Order ID</div>
-                    <div class="val" id="orderId">-</div>
-                </div>
-                <div style="text-align:right">
-                    <div class="lbl">Coins Masuk</div>
-                    <div class="val" id="coinsIn">-</div>
-                </div>
-            </div>
-
-            <p class="hint-text">
-                ✅ Pembayaran otomatis terdeteksi via webhook<br>
-                🔁 Status diperbarui tiap 5 detik<br>
-                ⏱️ QR berlaku 5 menit sejak dibuat
-            </p>
-
-            <a href="/isisaldo" class="pay-btn">
-                <i class="fas fa-plus-circle"></i> Top Up Lagi
-            </a>
-            <a href="/" class="back-link">← Kembali ke Beranda</a>
         </div>
+
+        <!-- Timer -->
+        <div class="timer-wrap" id="timerWrap">
+            <div class="timer-ring-wrap">
+                <svg width="60" height="60" viewBox="0 0 60 60">
+                    <circle class="ring-bg" cx="30" cy="30" r="26"/>
+                    <circle class="ring-progress" id="ringProgress" cx="30" cy="30" r="26"/>
+                </svg>
+                <div class="timer-center" id="timerIcon">⏱</div>
+            </div>
+            <div>
+                <div class="timer-digits" id="timerDigits">
+                    <span id="tMin">05</span><span class="t-sep">:</span><span id="tSec">00</span>
+                </div>
+                <div class="timer-sub" id="timerSub">Waktu tersisa</div>
+            </div>
+            <div class="timer-bar-bg"><div class="timer-bar-fill" id="timerBar"></div></div>
+        </div>
+
+        <!-- Auto check badge -->
+        <div class="auto-badge">
+            <div class="pulse-dot"></div>
+            <div class="auto-badge-text">Otomatis cek pembayaran tiap 5 detik</div>
+            <div class="auto-badge-count" id="nextCheck">5s</div>
+        </div>
+
+        <!-- QR -->
+        <div class="qr-outer">
+            <div class="qr-frame">
+                <div class="qr-corners">
+                    <div class="qr-corner tl"></div><div class="qr-corner tr"></div>
+                    <div class="qr-corner bl"></div><div class="qr-corner br"></div>
+                </div>
+                <div class="scan-line" id="scanLine"></div>
+                <div class="qr-label">SCAN QR CODE — BAYAR SEKARANG</div>
+                <div class="qr-canvas-wrap" id="qrWrap">
+                    <div style="width:190px;height:190px;display:flex;align-items:center;justify-content:center;font-size:32px">⏳</div>
+                </div>
+                <div class="qr-brand">
+                    <span style="font-size:15px">📱</span>
+                    <span class="qr-brand-text">QRIS · SEMUA E-WALLET</span>
+                    <span class="qr-brand-badge">AKTIF</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order info -->
+        <div class="order-info">
+            <div><div class="lbl">Order ID</div><div class="val" id="orderId">-</div></div>
+            <div style="text-align:right"><div class="lbl">Coins Masuk</div><div class="val" id="coinsIn">-</div></div>
+        </div>
+
+        <!-- Download -->
+        <button class="btn-download" id="downloadBtn">
+            <i class="fas fa-download"></i> Download QR
+        </button>
+
+        <!-- Cek Status | Batalkan -->
+        <div class="btn-group">
+            <button class="btn btn-check" id="cekBtn">
+                <i class="fas fa-sync-alt"></i> Cek Status
+            </button>
+            <button class="btn btn-cancel" id="batalBtn">
+                <i class="fas fa-times-circle"></i> Batalkan
+            </button>
+        </div>
+
     </div>
+</div>
+</div>
 </main>
 
-<!-- Success overlay -->
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loader-rings"><div class="ring ring-outer"></div><div class="ring ring-inner"></div></div>
+    <div class="loading-text" id="loadingText">MEMPROSES...</div>
+</div>
+
+<!-- Modal: Belum Dibayar -->
+<div class="modal-overlay" id="pendingModal">
+    <div class="modal-card">
+        <div class="modal-icon">⏳</div>
+        <h3 class="modal-title" style="color:#ffaa00">Belum Dibayar</h3>
+        <p class="modal-message">Pembayaran belum diterima. Scan QR dan selesaikan sebelum waktu habis.</p>
+        <div class="modal-actions"><button class="modal-btn mbtn-orange" id="pendingOk">Oke, Lanjut Bayar</button></div>
+    </div>
+</div>
+
+<!-- Modal: Konfirmasi Batalkan -->
+<div class="modal-overlay" id="confirmModal">
+    <div class="modal-card">
+        <div class="modal-icon">⚠️</div>
+        <h3 class="modal-title" style="color:#ff5555">Batalkan Transaksi?</h3>
+        <p class="modal-message">Transaksi akan dibatalkan permanen. Pastikan kamu belum melakukan pembayaran.</p>
+        <div class="modal-actions">
+            <button class="modal-btn mbtn-red" id="confirmYa">Ya, Batalkan</button>
+            <button class="modal-btn mbtn-green" id="confirmTidak">Tidak</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success -->
 <div class="success-overlay" id="successOverlay">
     <div class="success-icon">✅</div>
     <div class="success-title">Pembayaran Berhasil!</div>
     <div class="success-sub">Coins sudah masuk ke akun kamu</div>
     <div class="success-coins" id="successCoins">🪙 +0</div>
-    <a href="/isisaldo" class="pay-btn" style="width:auto;padding:14px 32px">
-        <i class="fas fa-wallet"></i> Lihat Saldo
-    </a>
+    <a href="/isisaldo" class="success-btn"><i class="fas fa-wallet"></i> Lihat Saldo</a>
 </div>
 
 <script src="/config.js"></script>
 <script src="/auth.js"></script>
 <script src="/script.js"></script>
 <script>
-// Ambil order_id dari URL: /isisaldo/ORDER_ID
 const pathParts = window.location.pathname.split('/');
-const ORDER_ID = pathParts[pathParts.length - 1];
+const ORDER_ID  = pathParts[pathParts.length - 1];
+const TOTAL_SEC = 300;
+let timerLeft = TOTAL_SEC;
+let timerInterval = null, pollInterval = null, nextPollIn = 5, isDone = false;
+const CIRC = 2 * Math.PI * 26;
 
-let timerInterval = null;
-let pollInterval = null;
-let timerTotal = 300; // 5 menit
-let timerLeft = 300;
-let paid = false;
+function renderTimer() {
+    const m = Math.floor(timerLeft/60).toString().padStart(2,'0');
+    const s = (timerLeft%60).toString().padStart(2,'0');
+    document.getElementById('tMin').textContent = m;
+    document.getElementById('tSec').textContent = s;
+    const pct = timerLeft / TOTAL_SEC;
+    document.getElementById('ringProgress').style.strokeDashoffset = CIRC*(1-pct);
+    document.getElementById('timerBar').style.width = (pct*100)+'%';
+    const urgent = timerLeft <= 60;
+    document.getElementById('timerDigits').className = 'timer-digits'+(urgent?' urgent':'');
+    document.getElementById('ringProgress').className = 'ring-progress'+(urgent?' urgent':'');
+    document.getElementById('timerBar').className = 'timer-bar-fill'+(urgent?' urgent':'');
+    if(urgent) document.getElementById('timerSub').textContent = '⚡ Segera bayar!';
+    if(timerLeft <= 0) {
+        clearInterval(timerInterval);
+        document.getElementById('timerWrap').style.borderColor = 'rgba(255,51,51,0.3)';
+        document.getElementById('timerSub').textContent = 'Waktu habis!';
+        document.getElementById('scanLine').style.opacity = '0.2';
+        if(!isDone) updateStatus('expired');
+    }
+}
+
+function startTimer() {
+    renderTimer();
+    timerInterval = setInterval(()=>{ timerLeft--; renderTimer(); }, 1000);
+}
+
+function startPollCountdown() {
+    clearInterval(pollInterval);
+    nextPollIn = 5;
+    document.getElementById('nextCheck').textContent = nextPollIn+'s';
+    pollInterval = setInterval(async()=>{
+        nextPollIn--;
+        document.getElementById('nextCheck').textContent = nextPollIn+'s';
+        if(nextPollIn <= 0) {
+            nextPollIn = 5;
+            await doCekStatus(true);
+        }
+    }, 1000);
+}
 
 async function loadTransaction() {
-    if (!ORDER_ID) { window.location.href = '/isisaldo'; return; }
-
+    if(!ORDER_ID) { window.location.href='/isisaldo'; return; }
     try {
         const res = await fetch(`/api/transaction/${ORDER_ID}`, {
-            headers: { 'Authorization': 'Bearer ' + Auth.getToken() }
+            headers:{'Authorization':'Bearer '+Auth.getToken()}
         });
-        if (!res.ok) { window.location.href = '/isisaldo'; return; }
+        if(!res.ok) { window.location.href='/isisaldo'; return; }
         const data = await res.json();
 
-        // Set amount
-        document.getElementById('payAmount').textContent = 'Rp ' + Number(data.amount).toLocaleString('id-ID');
-        document.getElementById('orderId').textContent = ORDER_ID;
-        document.getElementById('coinsIn').textContent = '🪙 +' + Number(data.amount).toLocaleString('id-ID');
+        document.getElementById('payAmount').textContent = 'Rp '+Number(data.amount).toLocaleString('id-ID');
+        document.getElementById('payOrder').textContent  = ORDER_ID;
+        document.getElementById('orderId').textContent   = ORDER_ID;
+        document.getElementById('coinsIn').textContent   = '🪙 +'+Number(data.amount).toLocaleString('id-ID');
 
-        // Set QR image
-        if (data.qr_image) {
-            document.getElementById('qrWrap').innerHTML = `<img src="${data.qr_image}" alt="QRIS">`;
-        } else if (data.qr_string) {
-            // Generate QR from string using QR API
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(data.qr_string)}`;
-            document.getElementById('qrWrap').innerHTML = `<img src="${qrUrl}" alt="QRIS">`;
+        // Render QR
+        const qrStr = data.qr_string || data.qr_image;
+        if(qrStr && window.QRCode) {
+            const wrap = document.getElementById('qrWrap');
+            wrap.innerHTML = '';
+            QRCode.toCanvas(document.createElement('canvas'), qrStr, {
+                width:190, margin:1,
+                color:{dark:'#000000',light:'#ffffff'},
+                errorCorrectionLevel:'H'
+            }, (err, canvas) => {
+                if(!err) wrap.appendChild(canvas);
+            });
         }
 
-        // Hitung timer berdasarkan created_at
-        if (data.created_at) {
-            const created = new Date(data.created_at).getTime();
-            const now = Date.now();
-            const elapsed = Math.floor((now - created) / 1000);
-            timerLeft = Math.max(0, timerTotal - elapsed);
+        // Timer
+        if(data.created_at) {
+            const elapsed = Math.floor((Date.now() - new Date(data.created_at).getTime())/1000);
+            timerLeft = Math.max(0, TOTAL_SEC - elapsed);
         }
 
         updateStatus(data.status, data.amount);
-        if (data.status === 'pending') {
-            startTimer();
-            startPolling();
-        }
-    } catch(e) {
-        console.error(e);
-    }
+        if(data.status === 'pending') { startTimer(); startPollCountdown(); }
+
+    } catch(e) { console.error(e); }
 }
 
 function updateStatus(status, amount) {
     const badge = document.getElementById('statusBadge');
     const text  = document.getElementById('statusText');
     badge.className = 'status-badge';
-
-    if (status === 'paid' || status === 'success') {
-        badge.classList.add('success');
-        text.textContent = 'Pembayaran Berhasil!';
-        paid = true;
-        stopPolling();
-        stopTimer();
-        document.getElementById('timerSection').style.display = 'none';
+    if(status==='paid'||status==='success') {
+        badge.classList.add('success'); text.textContent='Pembayaran Berhasil!';
+        isDone=true; clearInterval(timerInterval); clearInterval(pollInterval);
+        document.getElementById('timerWrap').style.display='none';
         showSuccess(amount);
-    } else if (status === 'expired') {
-        badge.classList.add('expired');
-        text.textContent = 'QR Kedaluwarsa';
-        stopPolling(); stopTimer();
-        document.getElementById('qrWrap').innerHTML = '<div style="width:220px;height:220px;display:flex;align-items:center;justify-content:center;font-size:14px;color:#ff6666;font-weight:800">QR EXPIRED</div>';
-        document.getElementById('timerSection').style.display = 'none';
-    } else if (status === 'failed') {
-        badge.classList.add('failed');
-        text.textContent = 'Pembayaran Gagal';
-        stopPolling(); stopTimer();
+    } else if(status==='expired') {
+        badge.classList.add('expired'); text.textContent='QR Kedaluwarsa';
+        isDone=true; clearInterval(timerInterval); clearInterval(pollInterval);
+        document.getElementById('timerWrap').style.display='none';
+        document.getElementById('qrWrap').innerHTML='<div style="width:190px;height:190px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#ff6666;font-weight:800">QR EXPIRED</div>';
+    } else if(status==='failed'||status==='cancelled') {
+        badge.classList.add('failed'); text.textContent='Dibatalkan';
+        isDone=true; clearInterval(timerInterval); clearInterval(pollInterval);
     } else {
-        badge.classList.add('waiting');
-        text.textContent = 'Menunggu Pembayaran';
+        badge.classList.add('waiting'); text.textContent='Menunggu Pembayaran';
     }
 }
 
-function startTimer() {
-    clearInterval(timerInterval);
-    renderTimer();
-    timerInterval = setInterval(() => {
-        timerLeft--;
-        renderTimer();
-        if (timerLeft <= 0) {
-            stopTimer();
-            if (!paid) updateStatus('expired');
-        }
-    }, 1000);
+async function doCekStatus(silent=false) {
+    if(isDone) return;
+    if(!silent) { document.getElementById('cekBtn').classList.add('loading'); document.getElementById('cekBtn').disabled=true; }
+    try {
+        const res = await fetch(`/api/transaction/${ORDER_ID}/status`,{headers:{'Authorization':'Bearer '+Auth.getToken()}});
+        const data = await res.json();
+        if(data.status && data.status!=='pending') updateStatus(data.status, data.amount);
+        else if(!silent) showModal('pendingModal');
+    } catch(e) {
+        if(!silent) alert('Gagal cek status');
+    } finally {
+        if(!silent) setTimeout(()=>{ document.getElementById('cekBtn').classList.remove('loading'); document.getElementById('cekBtn').disabled=false; },600);
+    }
 }
 
-function renderTimer() {
-    const m = Math.floor(timerLeft / 60).toString().padStart(2, '0');
-    const s = (timerLeft % 60).toString().padStart(2, '0');
-    const el = document.getElementById('timerCount');
-    el.textContent = `${m}:${s}`;
-    el.className = 'timer-count' + (timerLeft <= 30 ? ' urgent' : '');
-    const pct = (timerLeft / timerTotal) * 100;
-    document.getElementById('timerBar').style.width = pct + '%';
-    if (pct < 30) document.getElementById('timerBar').style.background = 'linear-gradient(90deg,#ff6666,#ff9900)';
-}
+function showModal(id) { document.getElementById(id).classList.add('show'); }
+function hideModal(id) { document.getElementById(id).classList.remove('show'); }
 
-function stopTimer() { clearInterval(timerInterval); }
+document.getElementById('pendingOk').onclick   = ()=>hideModal('pendingModal');
+document.getElementById('confirmTidak').onclick = ()=>hideModal('confirmModal');
+document.getElementById('cekBtn').onclick       = ()=>doCekStatus(false);
+document.getElementById('batalBtn').onclick     = ()=>showModal('confirmModal');
 
-async function startPolling() {
-    clearInterval(pollInterval);
-    pollInterval = setInterval(async () => {
-        if (paid) return stopPolling();
-        try {
-            const res = await fetch(`/api/transaction/${ORDER_ID}/status`, {
-                headers: { 'Authorization': 'Bearer ' + Auth.getToken() }
-            });
-            const data = await res.json();
-            if (data.status && data.status !== 'pending') {
-                updateStatus(data.status, data.amount);
-            }
-        } catch(e) {}
-    }, 5000);
-}
+document.getElementById('confirmYa').onclick = async()=>{
+    hideModal('confirmModal');
+    document.getElementById('loadingText').textContent='MEMBATALKAN...';
+    document.getElementById('loadingOverlay').classList.add('active');
+    try { await fetch(`/api/transaction/${ORDER_ID}/cancel`,{method:'POST',headers:{'Authorization':'Bearer '+Auth.getToken()}}); } catch(e){}
+    setTimeout(()=>{ window.location.href='/isisaldo'; }, 800);
+};
 
-function stopPolling() { clearInterval(pollInterval); }
+document.getElementById('downloadBtn').onclick = ()=>{
+    const canvas = document.querySelector('#qrWrap canvas');
+    if(!canvas) return;
+    const a = document.createElement('a');
+    a.download='qris-dzzxnzz.png';
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+};
 
 function showSuccess(amount) {
-    document.getElementById('successCoins').textContent = '🪙 +' + Number(amount).toLocaleString('id-ID');
+    document.getElementById('successCoins').textContent='🪙 +'+Number(amount).toLocaleString('id-ID');
     document.getElementById('successOverlay').classList.add('show');
-    // Refresh saldo navbar
-    Auth.getProfile(true).then(p => {
-        if (p) {
-            const coinEl = document.getElementById('coinCount');
-            if (coinEl) coinEl.textContent = Number(p.coins).toLocaleString('id-ID');
-        }
-    });
-    // Auto redirect setelah 4 detik
-    setTimeout(() => { window.location.href = '/isisaldo'; }, 4000);
+    Auth.getProfile(true).then(p=>{ if(p){ const c=document.getElementById('coinCount'); if(c) c.textContent=Number(p.coins).toLocaleString('id-ID'); } });
+    setTimeout(()=>{ window.location.href='/isisaldo'; }, 4000);
 }
 
-// Init
-if (!Auth.isLoggedIn()) { window.location.href = '/login'; }
+if(!Auth.isLoggedIn()) { window.location.href='/login'; }
 else { loadTransaction(); }
 </script>
 </body>
