@@ -37,9 +37,11 @@ async function sb(path, opts = {}) {
 
 // ── AUTH MIDDLEWARE ───────────────────────────────────────────────────────────
 async function verifyToken(token) {
+  console.log("[AUTH] token raw:", token?.substring(0,20));
   try {
     const decoded  = Buffer.from(token, 'base64').toString('utf8');
     const [username] = decoded.split(':');
+    console.log('[AUTH] decoded username:', username);
     if (!username) return null;
     const { ok, data } = await sb(`/profiles?username=eq.${username}&select=id,username,coins`);
     if (!ok || !data?.length) return null;
