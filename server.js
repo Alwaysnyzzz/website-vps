@@ -1,12 +1,8 @@
 // server.js — Backend DzzXNzz
-// Tidak perlu .env — semua config dari config.js
-// Install: npm install express node-fetch cors
-// Jalankan: node server.js
-
 const express = require('express');
+const https   = require('https');
 const app     = express();
 
-// Load config dari /var/www/html/config.js
 const { CONFIG } = require('/var/www/html/config.js');
 
 app.use(express.json());
@@ -16,38 +12,58 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── SUPABASE HELPER ───────────────────────────────────────────────────────────
-async function sb(path, opts = {}) {
-  const { fetch } = await import('node-fetch');
-  const key = opts.useService ? CONFIG.SUPABASE_SERVICE : CONFIG.SUPABASE_ANON;
-  const res = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1${path}`, {
-    ...opts,
-    headers: {
-      'apikey': key,
-      'Authorization': `Bearer ${key}`,
-      'Content-Type': 'application/json',
-      'Prefer': opts.prefer || 'return=representation',
-      ...(opts.headers || {}),
-    },
+// ── SUPABASE HELPER pakai https bawaan Node (tanpa node-fetch) ────────────────
+function sbRequest(path, opts = {}) {
+  return new Promise((resolve, reject) => {
+    const key = opts.useService ? CONFIG.SUPABASE_SERVICE : CONFIG.SUPABASE_ANON;
+    const url = new URL(CONFIG.SUPABASE_URL + '/rest/v1' + path);
+    const body = opts.body ? opts.body : null;
+    const options = {
+      hostname: url.hostname,
+      path: url.pathname + url.search,
+      method: opts.method || 'GET',
+      headers: {
+        'apikey': key,
+        'Authorization': 'Bearer ' + key,
+        'Content-Type': 'application/json',
+        'Prefer': opts.prefer || 'return=representation',
+      }
+    };
+    if (body) options.headers['Content-Length'] = Buffer.byteLength(body);
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try { resolve({ ok: res.statusCode < 300, status: res.statusCode, data: JSON.parse(data) }); }
+        catch { resolve({ ok: res.statusCode < 300, status: res.statusCode, data }); }
+      });
+    });
+    req.on('error', reject);
+    if (body) req.write(body);
+    req.end();
   });
-  const text = await res.text();
-  try { return { ok: res.ok, status: res.status, data: JSON.parse(text) }; }
-  catch { return { ok: res.ok, status: res.status, data: text }; }
+}
+
+async function sb(path, opts = {}) {
+  return sbRequest(path, opts);
 }
 
 // ── AUTH MIDDLEWARE ───────────────────────────────────────────────────────────
 async function verifyToken(token) {
-  console.log("[AUTH] token raw:", token?.substring(0,20));
   try {
     const decoded  = Buffer.from(token, 'base64').toString('utf8');
     const [username] = decoded.split(':');
-    console.log('[AUTH] decoded username:', username);
+    console.log('[AUTH] username:', username);
     if (!username) return null;
     const { ok, data } = await sb(`/profiles?username=eq.${username}&select=id,username,coins`);
-    console.log('[AUTH] query ok:', ok, 'data:', JSON.stringify(data));
+    console.log('[AUTH] ok:', ok, 'data:', JSON.stringify(data));
     if (!ok || !data?.length) return null;
     return data[0];
-  } catch { return null; }
+  } catch(e) {
+    console.log('[AUTH] error:', e.message);
+    return null;
+  }
 }
 
 async function auth(req, res, next) {
@@ -70,39 +86,55 @@ app.post('/api/create-transaction', auth, async (req, res) => {
     const user = req.user;
 
     if (!amount || isNaN(amount) || amount < CONFIG.MIN_TOPUP)
-      return res.status(400).json({ error: `Minimal top up Rp ${CONFIG.MIN_TOPUP.toLocaleString('id-ID')}` });
-    if (amount > 10_000_000)
+      return res.status(400).json({ error: `Minimal top up Rp ${CONFIG.MIN_TOPUP}` });
+    if (amount > 10000000)
       return res.status(400).json({ error: 'Maksimal top up Rp 10.000.000' });
 
     const order_id = genOrderId();
-    const { fetch } = await import('node-fetch');
 
     // Buat transaksi ke Pakasir
-    const pkRes  = await fetch(CONFIG.PAKASIR_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CONFIG.PAKASIR_API_KEY}` },
-      body: JSON.stringify({
-        project:     CONFIG.PAKASIR_PROJECT,
-        order_id,
-        amount,
-        description: `Topup DzzXNzz - ${user.username}`,
-        customer:    user.username,
-      }),
+    const pkUrl  = new URL(CONFIG.PAKASIR_ENDPOINT);
+    const pkBody = JSON.stringify({
+      project: CONFIG.PAKASIR_PROJECT,
+      order_id, amount,
+      description: `Topup DzzXNzz - ${user.username}`,
+      customer: user.username,
     });
-    const pkData = await pkRes.json();
 
-    if (!pkRes.ok) {
-      console.error('Pakasir error:', pkData);
-      return res.status(502).json({ error: 'Gagal buat transaksi QRIS', detail: pkData });
+    const pkResult = await new Promise((resolve, reject) => {
+      const options = {
+        hostname: pkUrl.hostname,
+        path: pkUrl.pathname,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + CONFIG.PAKASIR_API_KEY,
+          'Content-Length': Buffer.byteLength(pkBody),
+        }
+      };
+      const r = https.request(options, (res) => {
+        let d = '';
+        res.on('data', c => d += c);
+        res.on('end', () => {
+          try { resolve({ ok: res.statusCode < 300, data: JSON.parse(d) }); }
+          catch { resolve({ ok: false, data: d }); }
+        });
+      });
+      r.on('error', reject);
+      r.write(pkBody);
+      r.end();
+    });
+
+    console.log('[PAKASIR] ok:', pkResult.ok, 'data:', JSON.stringify(pkResult.data));
+
+    if (!pkResult.ok) {
+      return res.status(502).json({ error: 'Gagal buat transaksi QRIS', detail: pkResult.data });
     }
 
-    // Simpan ke Supabase
+    const pkData = pkResult.data;
     const tx = {
-      order_id,
-      user_id:     user.id,
-      username:    user.username,
-      amount,                              // amount rupiah = coins yang masuk
-      status:      'pending',
+      order_id, user_id: user.id, username: user.username, amount,
+      status: 'pending',
       qr_string:   pkData.qr_string  || pkData.data?.qr_string  || null,
       qr_image:    pkData.qr_image   || pkData.data?.qr_image   || null,
       pakasir_ref: pkData.ref        || pkData.data?.ref        || null,
@@ -116,7 +148,7 @@ app.post('/api/create-transaction', auth, async (req, res) => {
     res.json({ order_id, amount, qr_string: tx.qr_string, qr_image: tx.qr_image, expires_at: tx.expires_at });
 
   } catch (err) {
-    console.error(err);
+    console.error('[ERROR] create-transaction:', err.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -141,25 +173,29 @@ app.get('/api/transaction/:order_id/status', auth, async (req, res) => {
       `/transactions?order_id=eq.${req.params.order_id}&user_id=eq.${req.user.id}&select=status,amount`
     );
     if (!ok || !data?.length) return res.status(404).json({ error: 'Transaksi tidak ditemukan' });
-
     const tx = data[0];
 
-    // Kalau masih pending, cek langsung ke Pakasir
     if (tx.status === 'pending') {
       try {
-        const { fetch } = await import('node-fetch');
-        const ck = await fetch(`${CONFIG.PAKASIR_STATUS}/${req.params.order_id}`, {
-          headers: { 'Authorization': `Bearer ${CONFIG.PAKASIR_API_KEY}` }
+        const pkUrl = new URL(`${CONFIG.PAKASIR_STATUS}/${req.params.order_id}`);
+        const ckResult = await new Promise((resolve, reject) => {
+          const r = https.get({
+            hostname: pkUrl.hostname,
+            path: pkUrl.pathname,
+            headers: { 'Authorization': 'Bearer ' + CONFIG.PAKASIR_API_KEY }
+          }, (res) => {
+            let d = ''; res.on('data', c => d += c);
+            res.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve({}); } });
+          });
+          r.on('error', reject); r.end();
         });
-        const ckData = await ck.json();
-        const st = ckData.status || ckData.data?.status;
+        const st = ckResult.status || ckResult.data?.status;
         if (st === 'paid' || st === 'success') {
           await processPayment(req.params.order_id, req.user.id, tx.amount);
           return res.json({ status: 'paid', amount: tx.amount });
         }
-      } catch(e) { /* pakai status dari db */ }
+      } catch(e) {}
     }
-
     res.json({ status: tx.status, amount: tx.amount });
   } catch (err) {
     res.status(500).json({ error: 'Internal server error' });
@@ -174,14 +210,11 @@ app.post('/api/transaction/:order_id/cancel', auth, async (req, res) => {
     );
     if (!ok || !data?.length) return res.status(404).json({ error: 'Transaksi tidak ditemukan' });
     if (data[0].status !== 'pending') return res.status(400).json({ error: 'Tidak bisa dibatalkan' });
-
     await sb(`/transactions?order_id=eq.${req.params.order_id}`, {
       method: 'PATCH',
       body: JSON.stringify({ status: 'cancelled', cancelled_at: new Date().toISOString() }),
       useService: true,
     });
-
-    console.log(`[CANCEL] ${req.params.order_id}`);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: 'Internal server error' });
@@ -192,65 +225,47 @@ app.post('/api/transaction/:order_id/cancel', auth, async (req, res) => {
 app.post('/api/webhook/pakasir', async (req, res) => {
   try {
     console.log('[WEBHOOK]', JSON.stringify(req.body));
-
-    // Verifikasi secret
     const secret = req.headers['x-webhook-secret'] || req.headers['authorization'];
-    if (secret !== CONFIG.WEBHOOK_SECRET && secret !== `Bearer ${CONFIG.WEBHOOK_SECRET}`) {
-      console.warn('[WEBHOOK] Secret tidak cocok');
+    if (secret !== CONFIG.WEBHOOK_SECRET && secret !== 'Bearer ' + CONFIG.WEBHOOK_SECRET)
       return res.status(401).json({ error: 'Invalid secret' });
-    }
 
     const order_id = req.body.order_id || req.body.data?.order_id;
     const status   = req.body.status   || req.body.data?.status;
-
     if (!order_id) return res.status(400).json({ error: 'Missing order_id' });
 
     if (status === 'paid' || status === 'success') {
-      const { ok, data } = await sb(
-        `/transactions?order_id=eq.${order_id}&select=order_id,user_id,amount,status`
-      );
-      if (!ok || !data?.length) return res.status(404).json({ error: 'Transaksi tidak ditemukan' });
-
+      const { ok, data } = await sb(`/transactions?order_id=eq.${order_id}&select=order_id,user_id,amount,status`);
+      if (!ok || !data?.length) return res.status(404).json({ error: 'Not found' });
       const tx = data[0];
       if (tx.status === 'paid') return res.json({ ok: true, message: 'Already processed' });
-
       await processPayment(order_id, tx.user_id, tx.amount);
-      console.log(`[WEBHOOK] Paid: ${order_id} | +${tx.amount} coins`);
     }
-
     res.json({ ok: true });
   } catch (err) {
-    console.error('webhook error:', err);
+    console.error('[WEBHOOK ERROR]', err.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// ── HELPER: processPayment ────────────────────────────────────────────────────
-// amount rupiah = coins yang ditambahkan (1 rupiah = 1 coin)
+// ── processPayment ────────────────────────────────────────────────────────────
 async function processPayment(order_id, user_id, amount) {
-  // Update status transaksi
   await sb(`/transactions?order_id=eq.${order_id}`, {
     method: 'PATCH',
     body: JSON.stringify({ status: 'paid', paid_at: new Date().toISOString() }),
     useService: true,
   });
-
-  // Ambil coins sekarang
   const { data } = await sb(`/profiles?id=eq.${user_id}&select=id,coins`);
-  if (!data?.length) return console.error(`[processPayment] User tidak ditemukan: ${user_id}`);
-
-  // Tambah coins: 1 rupiah = 1 coin
+  if (!data?.length) return;
   const newCoins = (Number(data[0].coins) || 0) + Number(amount);
   await sb(`/profiles?id=eq.${user_id}`, {
     method: 'PATCH',
     body: JSON.stringify({ coins: newCoins }),
     useService: true,
   });
-
-  console.log(`[COINS] user=${user_id} | +${amount} | total=${newCoins}`);
+  console.log(`[COINS] +${amount} → total ${newCoins}`);
 }
 
-// ── GET /api/transactions (riwayat) ──────────────────────────────────────────
+// ── GET /api/transactions ─────────────────────────────────────────────────────
 app.get('/api/transactions', auth, async (req, res) => {
   try {
     const { data } = await sb(
@@ -262,12 +277,11 @@ app.get('/api/transactions', auth, async (req, res) => {
   }
 });
 
-// ── HEALTH CHECK ──────────────────────────────────────────────────────────────
+// ── HEALTH ────────────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, time: new Date().toISOString() });
 });
 
-// ── START ─────────────────────────────────────────────────────────────────────
 app.listen(CONFIG.PORT, () => {
   console.log(`\n🚀 DzzXNzz Backend jalan di port ${CONFIG.PORT}`);
   console.log(`   Health : http://localhost:${CONFIG.PORT}/api/health`);
