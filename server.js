@@ -44,6 +44,7 @@ async function verifyToken(token) {
     console.log('[AUTH] decoded username:', username);
     if (!username) return null;
     const { ok, data } = await sb(`/profiles?username=eq.${username}&select=id,username,coins`);
+    console.log('[AUTH] query ok:', ok, 'data:', JSON.stringify(data));
     if (!ok || !data?.length) return null;
     return data[0];
   } catch { return null; }
