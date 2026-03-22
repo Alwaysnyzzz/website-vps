@@ -405,7 +405,7 @@ async function loadTransaction() {
         document.getElementById('orderId').textContent   = ORDER_ID;
         document.getElementById('coinsIn').textContent   = '🪙 +'+Number(data.amount).toLocaleString('id-ID');
 
-        // Render QR
+        // Render QR dengan logo DzzXNzz di tengah
         const qrStr = data.qr_string || data.qr_image;
         if(qrStr && window.QRCode) {
             const wrap = document.getElementById('qrWrap');
@@ -414,8 +414,45 @@ async function loadTransaction() {
                 width:190, margin:1,
                 color:{dark:'#000000',light:'#ffffff'},
                 errorCorrectionLevel:'H'
-            }, (err, canvas) => {
-                if(!err) wrap.appendChild(canvas);
+            }, (err, qrCanvas) => {
+                if(err) return;
+
+                // Buat canvas baru untuk gabungkan QR + logo
+                const finalCanvas = document.createElement('canvas');
+                finalCanvas.width  = 190;
+                finalCanvas.height = 190;
+                const ctx = finalCanvas.getContext('2d');
+
+                // Gambar QR
+                ctx.drawImage(qrCanvas, 0, 0, 190, 190);
+
+                // Ukuran kotak logo di tengah
+                const boxW = 62, boxH = 24;
+                const boxX = (190 - boxW) / 2;
+                const boxY = (190 - boxH) / 2;
+
+                // Background kotak putih dengan padding
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.roundRect(boxX - 4, boxY - 4, boxW + 8, boxH + 8, 6);
+                ctx.fill();
+
+                // Border cyan tipis
+                ctx.strokeStyle = '#00e5ff';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.roundRect(boxX - 4, boxY - 4, boxW + 8, boxH + 8, 6);
+                ctx.stroke();
+
+                // Teks DzzXNzz
+                ctx.font = 'bold 13px "Righteous", cursive, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#06070f';
+                ctx.fillText('DzzXNzz', 190/2, 190/2);
+
+                finalCanvas.style.borderRadius = '6px';
+                wrap.appendChild(finalCanvas);
             });
         }
 
