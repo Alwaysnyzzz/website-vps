@@ -2,6 +2,7 @@
 
 const Auth = {
   getSession()  { try { return JSON.parse(localStorage.getItem('nyzz-session')); } catch { return null; } },
+  getToken()    { const s=this.getSession(); return s?.token||null; },
   isLoggedIn()  { const s=this.getSession(); if(!s?.token) return false; if(s.expires_at&&Date.now()>s.expires_at){this.logout();return false;} return true; },
   setSession(s) { localStorage.setItem('nyzz-session', JSON.stringify(s)); },
   logout()      { localStorage.removeItem('nyzz-session'); localStorage.removeItem('nyzz-profile'); },
