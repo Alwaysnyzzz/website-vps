@@ -241,13 +241,17 @@
     const token = (typeof Auth !== 'undefined') ? Auth.getToken() : null;
     const headers = token ? {'Authorization':'Bearer '+token} : {};
 
-    fetch(`/api/transaction/${orderId}`, {headers})
-        .then(r => r.json())
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    fetch(`/api/transaction/${orderId}`, {headers, signal: controller.signal})
+        .then(r => { clearTimeout(timeout); return r.json(); })
         .then(data => {
             if (data && !data.error) showStruk(data);
             else showStruk({ order_id: orderId, amount: 0, created_at: new Date().toISOString() });
         })
         .catch(() => {
+            clearTimeout(timeout);
             showStruk({ order_id: orderId, amount: 0, created_at: new Date().toISOString() });
         });
 
