@@ -1,6 +1,3 @@
-// config.js — Konfigurasi global
-// ⚠️ ISI SEMUA NILAI DI BAWAH SEBELUM PUSH KE GITHUB
-
 const CONFIG = {
 
   // ── Supabase (ambil dari supabase.com > Settings > API) ──
@@ -34,3 +31,4 @@ const TOPUP_PAKET = [
 
 // Agar bisa di-require oleh server.js
 if (typeof module !== 'undefined') module.exports = { CONFIG, TOPUP_PAKET };
+

@@ -182,19 +182,20 @@ app.get('/api/transaction/:order_id/status', auth, async (req, res) => {
     if (tx.status === 'pending') {
       try {
         const pkUrl = new URL(`${CONFIG.PAKASIR_STATUS}/${req.params.order_id}`);
+        const detailUrl = new URL(`${CONFIG.PAKASIR_STATUS}?project=${CONFIG.PAKASIR_PROJECT}&amount=${tx.amount}&order_id=${req.params.order_id}&api_key=${CONFIG.PAKASIR_API_KEY}`);
         const ckResult = await new Promise((resolve, reject) => {
           const r = https.get({
-            hostname: pkUrl.hostname,
-            path: pkUrl.pathname,
-            headers: { 'Authorization': 'Bearer ' + CONFIG.PAKASIR_API_KEY }
+            hostname: detailUrl.hostname,
+            path: detailUrl.pathname + detailUrl.search,
+            headers: {}
           }, (res) => {
             let d = ''; res.on('data', c => d += c);
             res.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve({}); } });
           });
           r.on('error', reject); r.end();
         });
-        const st = ckResult.status || ckResult.data?.status;
-        if (st === 'paid' || st === 'success') {
+        const st = ckResult.status || ckResult.data?.status || ckResult.transaction?.status;
+        if (st === 'paid' || st === 'success' || st === 'completed') {
           await processPayment(req.params.order_id, req.user.id, tx.amount);
           return res.json({ status: 'paid', amount: tx.amount });
         }
@@ -229,15 +230,15 @@ app.post('/api/transaction/:order_id/cancel', auth, async (req, res) => {
 app.post('/api/webhook/pakasir', async (req, res) => {
   try {
     console.log('[WEBHOOK]', JSON.stringify(req.body));
-    const secret = req.headers['x-webhook-secret'] || req.headers['authorization'];
-    if (secret !== CONFIG.WEBHOOK_SECRET && secret !== 'Bearer ' + CONFIG.WEBHOOK_SECRET)
-      return res.status(401).json({ error: 'Invalid secret' });
-
+    // Pakasir webhook tidak pakai secret header
+    // Body: { amount, order_id, project, status, payment_method, completed_at }
     const order_id = req.body.order_id || req.body.data?.order_id;
     const status   = req.body.status   || req.body.data?.status;
+
+    console.log('[WEBHOOK] order_id:', order_id, 'status:', status);
     if (!order_id) return res.status(400).json({ error: 'Missing order_id' });
 
-    if (status === 'paid' || status === 'success') {
+    if (status === 'paid' || status === 'success' || status === 'completed') {
       const { ok, data } = await sb(`/transactions?order_id=eq.${order_id}&select=order_id,user_id,amount,status`);
       if (!ok || !data?.length) return res.status(404).json({ error: 'Not found' });
       const tx = data[0];
