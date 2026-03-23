@@ -531,10 +531,8 @@ document.getElementById('downloadBtn').onclick = ()=>{
 };
 
 function showSuccess(amount) {
-    document.getElementById('successCoins').textContent='🪙 +'+Number(amount).toLocaleString('id-ID');
-    document.getElementById('successOverlay').classList.add('show');
-    Auth.getProfile(true).then(p=>{ if(p){ const c=document.getElementById('coinCount'); if(c) c.textContent=Number(p.coins).toLocaleString('id-ID'); } });
-    setTimeout(()=>{ window.location.href='/struk?order_id='+ORDER_ID; }, 4000);
+    // Langsung redirect ke struk tanpa delay
+    window.location.href = '/struk?order_id=' + ORDER_ID;
 }
 
 if(!Auth.isLoggedIn()) { window.location.href='/login'; }
