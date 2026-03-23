@@ -161,7 +161,7 @@ app.post('/api/create-transaction', auth, async (req, res) => {
 app.get('/api/transaction/:order_id', auth, async (req, res) => {
   try {
     const { ok, data } = await sb(
-      `/transactions?order_id=eq.${req.params.order_id}&user_id=eq.${req.user.id}&select=order_id,amount,status,qr_string,qr_image,created_at,expires_at`
+      `/transactions?order_id=eq.${req.params.order_id}&select=order_id,amount,status,qr_string,qr_image,created_at,expires_at,paid_at,payment_method`
     );
     if (!ok || !data?.length) return res.status(404).json({ error: 'Transaksi tidak ditemukan' });
     res.json(data[0]);
