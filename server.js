@@ -161,7 +161,7 @@ app.post('/api/create-transaction', auth, async (req, res) => {
 app.get('/api/transaction/:order_id', auth, async (req, res) => {
   try {
     const { ok, data } = await sb(
-      `/transactions?order_id=eq.${req.params.order_id}&select=order_id,amount,status,qr_string,qr_image,created_at,expires_at,paid_at,payment_method`
+      `/transactions?order_id=eq.${req.params.order_id}&select=order_id,amount,status,qr_string,qr_image,created_at,expires_at,paid_at,payment_method`, { useService: true }
     );
     if (!ok || !data?.length) return res.status(404).json({ error: 'Transaksi tidak ditemukan' });
     res.json(data[0]);
@@ -174,7 +174,7 @@ app.get('/api/transaction/:order_id', auth, async (req, res) => {
 app.get('/api/transaction/:order_id/status', auth, async (req, res) => {
   try {
     const { ok, data } = await sb(
-      `/transactions?order_id=eq.${req.params.order_id}&user_id=eq.${req.user.id}&select=status,amount`
+      `/transactions?order_id=eq.${req.params.order_id}&user_id=eq.${req.user.id}&select=status,amount`, { useService: true }
     );
     if (!ok || !data?.length) return res.status(404).json({ error: 'Transaksi tidak ditemukan' });
     const tx = data[0];
@@ -211,7 +211,7 @@ app.get('/api/transaction/:order_id/status', auth, async (req, res) => {
 app.post('/api/transaction/:order_id/cancel', auth, async (req, res) => {
   try {
     const { ok, data } = await sb(
-      `/transactions?order_id=eq.${req.params.order_id}&user_id=eq.${req.user.id}&select=order_id,status`
+      `/transactions?order_id=eq.${req.params.order_id}&user_id=eq.${req.user.id}&select=order_id,status`, { useService: true }
     );
     if (!ok || !data?.length) return res.status(404).json({ error: 'Transaksi tidak ditemukan' });
     if (data[0].status !== 'pending') return res.status(400).json({ error: 'Tidak bisa dibatalkan' });
