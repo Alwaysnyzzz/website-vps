@@ -146,8 +146,6 @@ Backend tambah coins ke user di Supabase
 Frontend polling detect paid → tampilkan success
 ```
 
----
-
 ## Troubleshooting
 
 | Masalah | Solusi |
