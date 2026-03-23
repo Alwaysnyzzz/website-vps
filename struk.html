@@ -237,18 +237,22 @@
         launchConfetti();
     }
 
-    // Fetch data transaksi
-    const token = (typeof Auth !== 'undefined') ? Auth.getToken() : null;
-    const headers = token ? {'Authorization':'Bearer '+token} : {};
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-
-    fetch(`/api/transaction/${orderId}`, {headers, signal: controller.signal})
-        .then(r => { clearTimeout(timeout); return r.json(); })
-        .then(data => {
-            if (data && !data.error) showStruk(data);
-            else showStruk({ order_id: orderId, amount: 0, created_at: new Date().toISOString() });
+        // Ambil langsung dari Supabase — tidak lewat backend
+    const sbUrl = CONFIG.SUPABASE_URL + '/rest/v1/transactions?order_id=eq.' + orderId + '&select=order_id,amount,status,created_at,paid_at';
+    fetch(sbUrl, {
+        headers: {
+            'apikey': CONFIG.SUPABASE_ANON,
+            'Authorization': 'Bearer ' + CONFIG.SUPABASE_ANON
+        }
+    })
+    .then(r => r.json())
+    .then(rows => {
+        if (rows && rows.length && !rows.error) showStruk(rows[0]);
+        else showStruk({ order_id: orderId, amount: 0, created_at: new Date().toISOString() });
+    })
+    .catch(() => {
+        showStruk({ order_id: orderId, amount: 0, created_at: new Date().toISOString() });
+    });
         })
         .catch(() => {
             clearTimeout(timeout);
