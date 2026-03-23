@@ -40,10 +40,20 @@
         .success-title { font-family:'Righteous',cursive;font-size:24px;color:#00ff88;filter:drop-shadow(0 0 10px rgba(0,255,136,0.5));margin-bottom:4px; }
         .success-sub { font-size:13px;color:rgba(255,255,255,0.45);font-weight:700; }
 
-        .coins-added { display:flex;align-items:center;justify-content:center;gap:14px;background:linear-gradient(135deg,rgba(255,224,0,0.1),rgba(255,136,0,0.07));border:1.5px solid rgba(255,224,0,0.3);border-radius:18px;padding:18px 24px;margin:18px 0;box-shadow:0 0 30px rgba(255,224,0,0.1); }
-        .coins-added-icon { font-size:40px;animation:coinFloat 2s ease-in-out infinite; }
-        .coins-added-label { font-size:11px;color:rgba(255,255,255,0.45);font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px; }
-        .coins-added-amount { font-family:'Righteous',cursive;font-size:32px;background:linear-gradient(135deg,#ffe000,#ff8800);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 10px rgba(255,224,0,0.5)); }
+        .coins-added { display:flex;flex-direction:column;align-items:center;gap:10px;margin:18px 0; }
+        .coins-added-icon { display:none; }
+        .coins-added-label { font-size:12px;color:rgba(255,255,255,0.4);font-weight:800;text-transform:uppercase;letter-spacing:1px; }
+        .coins-added-amount {
+            display:inline-flex;align-items:center;gap:8px;
+            background:rgba(255,224,0,0.1);
+            border:2px solid #ffe000;
+            border-radius:40px;
+            padding:10px 24px;
+            font-family:'Righteous',cursive;
+            font-size:28px;
+            color:#ffe000;
+            filter:drop-shadow(0 0 10px rgba(255,224,0,0.4));
+        }
 
         /* Produk info box */
         .produk-box { background:rgba(191,0,255,0.07);border:1px solid rgba(191,0,255,0.25);border-radius:14px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px; }
