@@ -407,53 +407,14 @@ async function loadTransaction() {
 
         // Render QR dengan logo DzzXNzz di tengah
         const qrStr = data.qr_string || data.qr_image;
-        if(qrStr && window.QRCode) {
+        if(qrStr) {
             const wrap = document.getElementById('qrWrap');
             wrap.innerHTML = '';
-            QRCode.toCanvas(document.createElement('canvas'), qrStr, {
-                width:190, margin:1,
-                color:{dark:'#000000',light:'#ffffff'},
-                errorCorrectionLevel:'H'
-            }, (err, qrCanvas) => {
-                if(err) return;
-
-                // Buat canvas baru untuk gabungkan QR + logo
-                const finalCanvas = document.createElement('canvas');
-                finalCanvas.width  = 190;
-                finalCanvas.height = 190;
-                const ctx = finalCanvas.getContext('2d');
-
-                // Gambar QR
-                ctx.drawImage(qrCanvas, 0, 0, 190, 190);
-
-                // Ukuran kotak logo di tengah
-                const boxW = 62, boxH = 24;
-                const boxX = (190 - boxW) / 2;
-                const boxY = (190 - boxH) / 2;
-
-                // Background kotak putih dengan padding
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.roundRect(boxX - 4, boxY - 4, boxW + 8, boxH + 8, 6);
-                ctx.fill();
-
-                // Border cyan tipis
-                ctx.strokeStyle = '#00e5ff';
-                ctx.lineWidth = 1.5;
-                ctx.beginPath();
-                ctx.roundRect(boxX - 4, boxY - 4, boxW + 8, boxH + 8, 6);
-                ctx.stroke();
-
-                // Teks DzzXNzz
-                ctx.font = 'bold 13px "Righteous", cursive, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillStyle = '#06070f';
-                ctx.fillText('DzzXNzz', 190/2, 190/2);
-
-                finalCanvas.style.borderRadius = '6px';
-                wrap.appendChild(finalCanvas);
-            });
+            const img = document.createElement('img');
+            img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=190x190&margin=1&data=' + encodeURIComponent(qrStr);
+            img.style.cssText = 'width:190px;height:190px;border-radius:6px;display:block;';
+            img.onerror = () => { wrap.innerHTML = '<div style="width:190px;height:190px;display:flex;align-items:center;justify-content:center;color:#ff6666;font-size:12px;font-weight:800">Gagal load QR</div>'; };
+            wrap.appendChild(img);
         }
 
         // Timer
