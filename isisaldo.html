@@ -282,16 +282,16 @@
                 <div class="metode-accordion" id="metodeAccordion">
                     <div class="metode-header" id="metodeHeader" onclick="toggleMetode()">
                         <div class="metode-header-left">
-                            <img id="metodeImg" src="/image/pakasir.jpg" onerror="this.src='https://ui-avatars.com/api/?name=P&background=00e5ff&color=fff'">
+                            <div id="metodeImgWrap" style="display:none"><img id="metodeImg" src="" style="width:28px;height:28px;border-radius:6px;object-fit:cover"></div>
                             <div>
-                                <div class="metode-label-top">Pilih Metode Pembayaran</div>
-                                <div class="metode-selected-name" id="metodeNama">Pakasir</div>
+                                <div class="metode-label-top">Metode Pembayaran</div>
+                                <div class="metode-selected-name" id="metodeNama">Pilih</div>
                             </div>
                         </div>
                         <i class="fas fa-chevron-down metode-arrow" id="metodeArrow"></i>
                     </div>
                     <div class="metode-body" id="metodeBody">
-                        <div class="metode-option active" id="opt-pakasir" onclick="pilihMetode('pakasir')">
+                        <div class="metode-option" id="opt-pakasir" onclick="pilihMetode('pakasir')">
                             <img src="/image/pakasir.jpg" onerror="this.src='https://ui-avatars.com/api/?name=P&background=00e5ff&color=fff'">
                             <div class="metode-option-info">
                                 <div class="metode-option-name">Pakasir</div>
@@ -308,6 +308,10 @@
                             <i class="fas fa-check-circle metode-check"></i>
                         </div>
                     </div>
+                </div>
+
+                <div id="metodeWarn" style="display:none;color:#ff9900;font-size:13px;font-weight:800;background:rgba(255,153,0,0.08);border:1px solid rgba(255,153,0,0.3);border-radius:10px;padding:10px 14px;margin-bottom:12px;">
+                    ⚠️ Pilih metode pembayaran terlebih dahulu
                 </div>
 
                 <div class="info-row">
@@ -336,7 +340,7 @@
     <script src="/auth.js"></script>
     <script src="/script.js"></script>
     <script>
-        let selectedMetode = 'pakasir';
+        let selectedMetode = null;
 
         function toggleMetode() {
             const body  = document.getElementById('metodeBody');
@@ -347,17 +351,17 @@
 
         function pilihMetode(metode) {
             selectedMetode = metode;
-            // Update header
             const names = { pakasir: 'Pakasir', saweria: 'Saweria' };
             const imgs  = { pakasir: '/image/pakasir.jpg', saweria: '/image/saweria.jpg' };
             document.getElementById('metodeNama').textContent = names[metode];
             document.getElementById('metodeImg').src = imgs[metode];
-            // Update active state
+            document.getElementById('metodeImgWrap').style.display = 'block';
             document.querySelectorAll('.metode-option').forEach(o => o.classList.remove('active'));
             document.getElementById('opt-'+metode).classList.add('active');
-            // Tutup accordion
             document.getElementById('metodeBody').classList.remove('open');
             document.getElementById('metodeArrow').classList.remove('open');
+            // Hapus warning kalau sudah pilih
+            document.getElementById('metodeWarn').style.display = 'none';
         }
 
         function setAmount(val, btn) {
@@ -401,6 +405,12 @@
             const amount = parseInt(document.getElementById('amount').value);
             const errorMsg = document.getElementById('errorMsg');
             errorMsg.classList.remove('show');
+
+            if (!selectedMetode) {
+                document.getElementById('metodeWarn').style.display = 'block';
+                document.getElementById('metodeAccordion').scrollIntoView({behavior:'smooth',block:'center'});
+                return;
+            }
 
             if (!amount || amount < 500) {
                 errorMsg.textContent = '⚠️ Minimal isi saldo Rp 500';

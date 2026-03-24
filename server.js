@@ -180,16 +180,18 @@ app.post('/api/create-transaction', auth, async (req, res) => {
     }
 
     const pkData = pkResult.data?.payment || pkResult.data || {};
-    // Pakasir bisa kirim QR di berbagai field
-    const qr_string = pkData.payment_number || pkData.qr_string || pkData.qr_code || pkData.data?.qr_string || null;
-    const qr_image  = pkData.qr_image  || pkData.data?.qr_image  || null;
-    console.log('[QR] qr_string:', qr_string?.substring(0,50), 'qr_image:', qr_image?.substring(0,50));
+    const qr_string   = pkData.payment_number || pkData.qr_string || pkData.qr_code || null;
+    const qr_image    = pkData.qr_image || null;
+    const pk_fee      = pkData.fee || Math.round(amount * 0.002);
+    const total_bayar = pkData.total_payment || (amount + pk_fee);
+    console.log('[QR] qr_string:', qr_string?.substring(0,50), 'fee:', pk_fee, 'total:', total_bayar);
 
     const tx = {
       order_id, user_id: user.id, username: user.username, amount,
       status: 'pending',
-      qr_string,
-      qr_image,
+      qr_string, qr_image,
+      fee: pk_fee,
+      total_bayar,
       pakasir_ref: pkData.ref || pkData.order_id || null,
       created_at:  new Date().toISOString(),
       expires_at:  new Date(Date.now() + 5 * 60 * 1000).toISOString(),
@@ -230,25 +232,58 @@ app.get('/api/transaction/:order_id/status', auth, async (req, res) => {
 
     if (tx.status === 'pending') {
       try {
-        const pkUrl = new URL(`${CONFIG.PAKASIR_STATUS}/${req.params.order_id}`);
-        const detailUrl = new URL(`${CONFIG.PAKASIR_STATUS}?project=${CONFIG.PAKASIR_PROJECT}&amount=${tx.amount}&order_id=${req.params.order_id}&api_key=${CONFIG.PAKASIR_API_KEY}`);
-        const ckResult = await new Promise((resolve, reject) => {
-          const r = https.get({
-            hostname: detailUrl.hostname,
-            path: detailUrl.pathname + detailUrl.search,
-            headers: {}
-          }, (res) => {
-            let d = ''; res.on('data', c => d += c);
-            res.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve({}); } });
+        // Ambil metode & pakasir_ref dari DB
+        const { data: txFull } = await sb(
+          `/transactions?order_id=eq.${req.params.order_id}&select=metode,pakasir_ref`, { useService: true }
+        );
+        const metode     = txFull?.[0]?.metode || 'pakasir';
+        const pakasirRef = txFull?.[0]?.pakasir_ref;
+        let isPaid = false;
+
+        if (metode === 'saweria' && pakasirRef) {
+          // Cek via Maelyn API
+          const swBody = JSON.stringify({ user_id: CONFIG.SAWERIA_USER_ID, payment_id: pakasirRef });
+          const swUrl  = new URL(CONFIG.MAELYN_BASE + '/saweria/check/payment');
+          const swResult = await new Promise((resolve, reject) => {
+            const timer = setTimeout(() => reject(new Error('timeout')), 8000);
+            const r = https.request({
+              hostname: swUrl.hostname, path: swUrl.pathname, method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'mg-apikey': CONFIG.MAELYN_API_KEY, 'Content-Length': Buffer.byteLength(swBody) }
+            }, (res) => {
+              let d = ''; res.setEncoding('utf8');
+              res.on('data', chunk => d += chunk);
+              res.on('end', () => { clearTimeout(timer); try { resolve(JSON.parse(d)); } catch(e) { resolve({}); } });
+              res.on('error', e => { clearTimeout(timer); reject(e); });
+            });
+            r.on('error', e => { clearTimeout(timer); reject(e); });
+            r.write(swBody); r.end();
           });
-          r.on('error', reject); r.end();
-        });
-        const st = ckResult.status || ckResult.data?.status || ckResult.transaction?.status;
-        if (st === 'paid' || st === 'success' || st === 'completed') {
+          console.log('[SAWERIA CHECK]', JSON.stringify(swResult).substring(0,150));
+          const swStatus = swResult?.result?.data?.status || swResult?.data?.status || '';
+          if (swStatus === 'SUCCESS' || swStatus === 'success') isPaid = true;
+        } else {
+          // Cek via Pakasir
+          const detailUrl = new URL(`${CONFIG.PAKASIR_STATUS}?project=${CONFIG.PAKASIR_PROJECT}&amount=${tx.amount}&order_id=${req.params.order_id}&api_key=${CONFIG.PAKASIR_API_KEY}`);
+          const ckResult = await new Promise((resolve, reject) => {
+            const r = https.get({
+              hostname: detailUrl.hostname,
+              path: detailUrl.pathname + detailUrl.search,
+              headers: {}
+            }, (res) => {
+              let d = ''; res.on('data', c => d += c);
+              res.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve({}); } });
+            });
+            r.on('error', reject); r.end();
+          });
+          const st = ckResult.status || ckResult.data?.status || ckResult.transaction?.status;
+          if (st === 'paid' || st === 'success' || st === 'completed') isPaid = true;
+        }
+
+        if (isPaid) {
           await processPayment(req.params.order_id, req.user.id, tx.amount);
           return res.json({ status: 'paid', amount: tx.amount });
         }
-      } catch(e) {}
+      } catch(e) { console.log('[STATUS CHECK ERROR]', e.message); }
     }
     res.json({ status: tx.status, amount: tx.amount });
   } catch (err) {
