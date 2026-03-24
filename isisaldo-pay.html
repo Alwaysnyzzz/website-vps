@@ -429,15 +429,43 @@ async function loadTransaction() {
         const res = await fetch(`/api/transaction/${ORDER_ID}`, {
             headers:{'Authorization':'Bearer '+Auth.getToken()}
         });
-        if(!res.ok) { window.location.href='/isisaldo'; return; }
+        if(!res.ok) {
+            const errData = await res.json().catch(()=>({error:'Unknown error'}));
+            console.error('[loadTransaction] API error:', res.status, errData);
+            // Kalau 401 = token invalid → redirect login
+            if(res.status === 401) { window.location.href='/login'; return; }
+            // Kalau 404 kemungkinan transaksi belum masuk DB, retry sekali setelah 2 detik
+            if(res.status === 404) {
+                document.getElementById('loadingText') && (document.getElementById('loadingText').textContent = 'Memuat data...');
+                await new Promise(r => setTimeout(r, 2000));
+                const retry = await fetch(`/api/transaction/${ORDER_ID}`, {
+                    headers:{'Authorization':'Bearer '+Auth.getToken()}
+                });
+                if(!retry.ok) {
+                    alert('Transaksi tidak ditemukan ('+res.status+'). Kembali ke halaman top up.');
+                    window.location.href='/isisaldo';
+                    return;
+                }
+                const retryData = await retry.json();
+                // proses retryData
+                return processTransaction(retryData);
+            }
+            alert('Gagal memuat transaksi ('+res.status+'): '+(errData.error||'Server error'));
+            window.location.href='/isisaldo';
+            return;
+        }
         const data = await res.json();
+        processTransaction(data);
 
+    } catch(e) { console.error(e); }
+}
+
+function processTransaction(data) {
         document.getElementById('payAmount').textContent = 'Rp '+Number(data.amount).toLocaleString('id-ID');
         document.getElementById('payOrder').textContent  = ORDER_ID;
         document.getElementById('orderId').textContent   = ORDER_ID;
         document.getElementById('coinsIn').textContent   = '🪙 +'+Number(data.amount).toLocaleString('id-ID');
 
-        // Render QR dengan logo DzzXNzz di tengah
         // Tampilkan fee box
         const amount    = Number(data.amount) || 0;
         const fee       = Number(data.fee) || 0;
@@ -465,9 +493,6 @@ async function loadTransaction() {
 
         updateStatus(data.status, data.amount);
         if(data.status === 'pending') { startTimer(); startPollCountdown(); }
-
-    } catch(e) { console.error(e); }
-}
 
 function updateStatus(status, amount) {
     const badge = document.getElementById('statusBadge');

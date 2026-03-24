@@ -132,7 +132,11 @@ app.post('/api/create-transaction', auth, async (req, res) => {
           created_at: new Date().toISOString(),
           expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
         };
-        await sb('/transactions', { method: 'POST', body: JSON.stringify(tx), useService: true });
+        const insertSw = await sb('/transactions', { method: 'POST', body: JSON.stringify(tx), useService: true });
+        if (!insertSw.ok) {
+          console.error('[TX SAWERIA INSERT FAIL]', JSON.stringify(insertSw.data));
+          return res.status(500).json({ error: 'Gagal menyimpan transaksi Saweria ke database' });
+        }
         console.log('[TX SAWERIA] ' + order_id + ' | ' + user.username + ' | Rp ' + amount);
         return res.json({ order_id, amount, qr_string, qr_image: null, expires_at: tx.expires_at });
       } catch(err) {
@@ -197,7 +201,11 @@ app.post('/api/create-transaction', auth, async (req, res) => {
       expires_at:  new Date(Date.now() + 5 * 60 * 1000).toISOString(),
     };
 
-    await sb('/transactions', { method: 'POST', body: JSON.stringify(tx), useService: true });
+    const insertResult = await sb('/transactions', { method: 'POST', body: JSON.stringify(tx), useService: true });
+    if (!insertResult.ok) {
+      console.error('[TX INSERT FAIL]', JSON.stringify(insertResult.data));
+      return res.status(500).json({ error: 'Gagal menyimpan transaksi ke database' });
+    }
     console.log(`[TX] ${order_id} | ${user.username} | Rp ${amount}`);
 
     res.json({ order_id, amount, qr_string: tx.qr_string, qr_image: tx.qr_image, expires_at: tx.expires_at });
@@ -212,7 +220,7 @@ app.post('/api/create-transaction', auth, async (req, res) => {
 app.get('/api/transaction/:order_id', auth, async (req, res) => {
   try {
     const { ok, data } = await sb(
-      `/transactions?order_id=eq.${req.params.order_id}&select=order_id,amount,status,qr_string,qr_image,created_at,expires_at,paid_at,payment_method`, { useService: true }
+      `/transactions?order_id=eq.${req.params.order_id}&select=order_id,amount,status,qr_string,qr_image,created_at,expires_at,paid_at,metode,fee,total_bayar`, { useService: true }
     );
     if (!ok || !data?.length) return res.status(404).json({ error: 'Transaksi tidak ditemukan' });
     res.json(data[0]);
