@@ -91,6 +91,55 @@ app.post('/api/create-transaction', auth, async (req, res) => {
       return res.status(400).json({ error: 'Maksimal top up Rp 10.000.000' });
 
     const order_id = genOrderId();
+    const metode = req.body.metode || 'pakasir';
+
+    // Buat transaksi ke Saweria jika dipilih
+    if (metode === 'saweria') {
+      try {
+        const swBody = JSON.stringify({
+          user_id: CONFIG.SAWERIA_USER_ID,
+          amount:  String(amount),
+          name:    user.username,
+          email:   'noreply@nyzz.my.id',
+          msg:     'Topup DzzXNzz - ' + user.username,
+        });
+        const swUrl = new URL(CONFIG.MAELYN_BASE + '/saweria/create/payment');
+        const swResult = await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error('timeout')), 10000);
+          const r = https.request({
+            hostname: swUrl.hostname, path: swUrl.pathname,
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'mg-apikey': CONFIG.MAELYN_API_KEY, 'Content-Length': Buffer.byteLength(swBody) }
+          }, (res) => {
+            let d = ''; res.setEncoding('utf8');
+            res.on('data', chunk => d += chunk);
+            res.on('end', () => { clearTimeout(timer); try { resolve(JSON.parse(d)); } catch(e) { resolve({}); } });
+          });
+          r.on('error', e => { clearTimeout(timer); reject(e); });
+          r.write(swBody); r.end();
+        });
+
+        console.log('[SAWERIA]', JSON.stringify(swResult));
+
+        const qr_string = swResult?.data?.qr_code || swResult?.qr_code || swResult?.data?.payment_url || null;
+        const payment_id = swResult?.data?.payment_id || swResult?.payment_id || null;
+
+        const tx = {
+          order_id, user_id: user.id, username: user.username, amount,
+          status: 'pending', metode: 'saweria',
+          qr_string, qr_image: null,
+          pakasir_ref: payment_id,
+          created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+        };
+        await sb('/transactions', { method: 'POST', body: JSON.stringify(tx), useService: true });
+        console.log('[TX SAWERIA] ' + order_id + ' | ' + user.username + ' | Rp ' + amount);
+        return res.json({ order_id, amount, qr_string, qr_image: null, expires_at: tx.expires_at });
+      } catch(err) {
+        console.error('[SAWERIA ERROR]', err.message);
+        return res.status(502).json({ error: 'Gagal buat transaksi Saweria: ' + err.message });
+      }
+    }
 
     // Buat transaksi ke Pakasir
     const pkUrl  = new URL(CONFIG.PAKASIR_ENDPOINT);

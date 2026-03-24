@@ -139,6 +139,49 @@
         .saldo-btn:active { transform:scale(0.97); }
         .saldo-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
 
+        /* Accordion metode pembayaran */
+        .metode-accordion {
+            margin-bottom: 18px;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1.5px solid rgba(0,229,255,0.2);
+        }
+        .metode-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 13px 16px; cursor: pointer;
+            background: rgba(0,229,255,0.05);
+            transition: 0.2s; user-select: none;
+        }
+        .metode-header:hover { background: rgba(0,229,255,0.1); }
+        .metode-header-left { display: flex; align-items: center; gap: 10px; }
+        .metode-header-left img { width: 28px; height: 28px; border-radius: 6px; object-fit: cover; }
+        .metode-selected-name { font-size: 14px; font-weight: 800; color: #fff; }
+        .metode-label-top { font-size: 10px; font-weight: 800; color: rgba(0,229,255,0.5); letter-spacing: 1px; text-transform: uppercase; }
+        .metode-arrow {
+            color: rgba(0,229,255,0.6); font-size: 13px;
+            transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .metode-arrow.open { transform: rotate(180deg); }
+        .metode-body {
+            max-height: 0; overflow: hidden;
+            transition: max-height 0.35s ease;
+            background: rgba(0,0,0,0.2);
+        }
+        .metode-body.open { max-height: 200px; }
+        .metode-option {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px; cursor: pointer;
+            transition: 0.2s; border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .metode-option:hover { background: rgba(0,229,255,0.08); }
+        .metode-option.active { background: rgba(0,229,255,0.1); }
+        .metode-option img { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
+        .metode-option-info { flex: 1; }
+        .metode-option-name { font-size: 14px; font-weight: 800; color: #fff; }
+        .metode-option-desc { font-size: 11px; color: rgba(255,255,255,0.4); font-weight: 700; margin-top: 1px; }
+        .metode-check { color: #00ff88; font-size: 14px; opacity: 0; transition: 0.2s; }
+        .metode-option.active .metode-check { opacity: 1; }
+
         .loading-overlay {
             position:fixed; inset:0;
             background:rgba(0,0,0,0.8); backdrop-filter:blur(5px);
@@ -235,6 +278,38 @@
                     </div>
                 </div>
 
+                <!-- Dropdown metode pembayaran -->
+                <div class="metode-accordion" id="metodeAccordion">
+                    <div class="metode-header" id="metodeHeader" onclick="toggleMetode()">
+                        <div class="metode-header-left">
+                            <img id="metodeImg" src="/image/pakasir.jpg" onerror="this.src='https://ui-avatars.com/api/?name=P&background=00e5ff&color=fff'">
+                            <div>
+                                <div class="metode-label-top">Pilih Metode Pembayaran</div>
+                                <div class="metode-selected-name" id="metodeNama">Pakasir</div>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-down metode-arrow" id="metodeArrow"></i>
+                    </div>
+                    <div class="metode-body" id="metodeBody">
+                        <div class="metode-option active" id="opt-pakasir" onclick="pilihMetode('pakasir')">
+                            <img src="/image/pakasir.jpg" onerror="this.src='https://ui-avatars.com/api/?name=P&background=00e5ff&color=fff'">
+                            <div class="metode-option-info">
+                                <div class="metode-option-name">Pakasir</div>
+                                <div class="metode-option-desc">QRIS via Pakasir</div>
+                            </div>
+                            <i class="fas fa-check-circle metode-check"></i>
+                        </div>
+                        <div class="metode-option" id="opt-saweria" onclick="pilihMetode('saweria')">
+                            <img src="/image/saweria.jpg" onerror="this.src='https://ui-avatars.com/api/?name=S&background=ff8800&color=fff'">
+                            <div class="metode-option-info">
+                                <div class="metode-option-name">Saweria</div>
+                                <div class="metode-option-desc">QRIS via Saweria</div>
+                            </div>
+                            <i class="fas fa-check-circle metode-check"></i>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="info-row">
                     <i class="fas fa-info-circle"></i>
                     <span>Minimal top up <strong>Rp 500</strong> · Pembayaran via <strong>QRIS</strong> · 1 Rupiah = 1 Coin</span>
@@ -261,6 +336,30 @@
     <script src="/auth.js"></script>
     <script src="/script.js"></script>
     <script>
+        let selectedMetode = 'pakasir';
+
+        function toggleMetode() {
+            const body  = document.getElementById('metodeBody');
+            const arrow = document.getElementById('metodeArrow');
+            body.classList.toggle('open');
+            arrow.classList.toggle('open');
+        }
+
+        function pilihMetode(metode) {
+            selectedMetode = metode;
+            // Update header
+            const names = { pakasir: 'Pakasir', saweria: 'Saweria' };
+            const imgs  = { pakasir: '/image/pakasir.jpg', saweria: '/image/saweria.jpg' };
+            document.getElementById('metodeNama').textContent = names[metode];
+            document.getElementById('metodeImg').src = imgs[metode];
+            // Update active state
+            document.querySelectorAll('.metode-option').forEach(o => o.classList.remove('active'));
+            document.getElementById('opt-'+metode).classList.add('active');
+            // Tutup accordion
+            document.getElementById('metodeBody').classList.remove('open');
+            document.getElementById('metodeArrow').classList.remove('open');
+        }
+
         function setAmount(val, btn) {
             document.getElementById('amount').value = val;
             document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
@@ -328,7 +427,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + token
                     },
-                    body: JSON.stringify({ amount })
+                    body: JSON.stringify({ amount, metode: selectedMetode })
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Gagal membuat transaksi');

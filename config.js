@@ -1,3 +1,6 @@
+// config.js — Konfigurasi global
+// ⚠️ ISI SEMUA NILAI DI BAWAH SEBELUM PUSH KE GITHUB
+
 const CONFIG = {
 
   // ── Supabase (ambil dari supabase.com > Settings > API) ──
@@ -14,9 +17,17 @@ const CONFIG = {
   // ── Webhook secret (bebas, samain nanti di Pakasir) ──────
   WEBHOOK_SECRET:   'rahasia123',
 
+  // ── Saweria (saweria.io) ──────────────────────────────────
+  SAWERIA_USER_ID:  'a9c2bc37-e557-463e-98b8-c29fc37700b0',
+  SAWERIA_USERNAME: 'alwaysnyzzz',
+
+  // ── Maelyn API (maelyn.sbs) ───────────────────────────────
+  MAELYN_API_KEY:   'mg-Lo81sdCx1uYPYd3LAIzzHJdygokrK98s',
+  MAELYN_BASE:      'https://api.maelyn.sbs/api',
+
   // ── Lainnya (tidak perlu diubah) ─────────────────────────
   PORT:             3000,
-  MIN_TOPUP:        500,   // minimal top up dalam rupiah
+  MIN_TOPUP:        1000,   // minimal top up dalam rupiah
 
 };
 
@@ -31,4 +42,3 @@ const TOPUP_PAKET = [
 
 // Agar bisa di-require oleh server.js
 if (typeof module !== 'undefined') module.exports = { CONFIG, TOPUP_PAKET };
-
